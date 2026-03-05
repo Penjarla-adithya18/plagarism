@@ -81,7 +81,7 @@ export function requireRole(user: AuthUser, roles: UserRole[]): Response | null 
 export async function createSessionForUser(
   supabase: ReturnType<typeof createServiceClient>,
   userId: string,
-  validDays = 7
+  validDays = 30
 ): Promise<{ token: string; expiresAt: string }> {
   const token = randomBase64Url(32)
   const tokenHash = await sha256Base64Url(token)

@@ -277,35 +277,68 @@ async function call<T>(
           const isAuthCall = fn === 'auth'
           if (!isAuthCall && typeof window !== 'undefined') {
             const storedToken = getSessionToken()
-            // Only clear if the token is stale (set more than 5s ago).
-            // A freshly-obtained token (from a concurrent login) must not be cleared.
             const tokenAge = Date.now() - _sessionSetAt
-            if (storedToken && tokenAge > 5000) {
+            // Only clear + redirect if the session is GENUINELY expired.
+            // A 401 from a cold-starting edge function or a transient network
+            // issue must NOT log the user out of a still-valid session.
+            const expiresAt = getSessionExpiresAt()
+            const isGenuinelyExpired = expiresAt
+              ? new Date(expiresAt).getTime() <= Date.now()
+              : tokenAge > 7 * 24 * 60 * 60 * 1000 // fallback: 7 days
+            if (storedToken && tokenAge > 5000 && isGenuinelyExpired) {
               setSessionToken(null)
               localStorage.removeItem('currentUser')
               localStorage.removeItem(SESSION_TOKEN_KEY)
               localStorage.removeItem(SESSION_EXPIRES_AT_KEY)
               localStorage.removeItem(SESSION_REFRESHED_AT_KEY)
-              // Schedule a redirect but make it cancellable — if a login
-              // succeeds before the timer fires, setSessionToken cancels it.
               if (!_pendingRedirectTimer) {
                 _pendingRedirectTimer = setTimeout(() => {
                   _pendingRedirectTimer = null
-                  // Double-check: only redirect if STILL logged out
                   if (!getSessionToken()) {
                     window.location.href = '/login?reason=session_expired'
                   }
                 }, 500)
               }
             }
+            // Session not expired — just throw; the caller will handle the error
+            // without kicking the user out (likely a transient edge-function error).
           } else if (!currentToken && typeof window !== 'undefined') {
-            // If there is no session token at all, clear stale local user cache.
             localStorage.removeItem('currentUser')
             localStorage.removeItem(SESSION_TOKEN_KEY)
             localStorage.removeItem(SESSION_EXPIRES_AT_KEY)
             localStorage.removeItem(SESSION_REFRESHED_AT_KEY)
           }
           throw new Error(`Edge function ${fn} error 401: ${text}`)
+        }
+        // 403 from Supabase Edge Functions = "Invalid JWT" (expired/bad token)
+        // Treat identically to 401: clear session and redirect to login.
+        if (res.status === 403) {
+          const text = await res.text()
+          const isAuthCall = fn === 'auth'
+          if (!isAuthCall && typeof window !== 'undefined') {
+            const storedToken = getSessionToken()
+            const tokenAge = Date.now() - _sessionSetAt
+            const expiresAt = getSessionExpiresAt()
+            const isGenuinelyExpired = expiresAt
+              ? new Date(expiresAt).getTime() <= Date.now()
+              : tokenAge > 7 * 24 * 60 * 60 * 1000
+            if (storedToken && tokenAge > 5000 && isGenuinelyExpired) {
+              setSessionToken(null)
+              localStorage.removeItem('currentUser')
+              localStorage.removeItem(SESSION_TOKEN_KEY)
+              localStorage.removeItem(SESSION_EXPIRES_AT_KEY)
+              localStorage.removeItem(SESSION_REFRESHED_AT_KEY)
+              if (!_pendingRedirectTimer) {
+                _pendingRedirectTimer = setTimeout(() => {
+                  _pendingRedirectTimer = null
+                  if (!getSessionToken()) {
+                    window.location.href = '/login?reason=session_expired'
+                  }
+                }, 500)
+              }
+            }
+          }
+          throw new Error(`Edge function ${fn} error 403: ${text}`)
         }
         // Retry on 5xx server errors
         if (res.status >= 500 && attempt < MAX_RETRIES) {
@@ -413,37 +446,21 @@ export async function forgotPasswordReset(
 export async function sendOtpRequest(
   phoneNumber: string
 ): Promise<{ success: boolean; message: string }> {
-  const { url, key } = getEnv()
-  const endpoint = `${url}/functions/v1/auth`
   try {
+    const base = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000')
     const response = await fetchWithTimeout(
-      endpoint,
+      `${base}/api/auth/send-otp`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: key,
-        },
-        body: JSON.stringify({ action: 'send-otp', phoneNumber }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber }),
       },
       10_000
     )
-
-    const data = (await response.json().catch(() => ({}))) as {
-      success?: boolean
-      message?: string
-      error?: string
-    }
-    if (!response.ok) {
-      return {
-        success: false,
-        message: data.message || data.error || 'Failed to send OTP. Please try again.',
-      }
-    }
-
+    const data = (await response.json().catch(() => ({}))) as { success?: boolean; message?: string }
     return {
       success: !!data.success,
-      message: data.message || 'OTP sent successfully.',
+      message: data.message || (data.success ? 'OTP sent successfully.' : 'Failed to send OTP. Please try again.'),
     }
   } catch (err) {
     return {
@@ -457,37 +474,21 @@ export async function verifyOtpRequest(
   phoneNumber: string,
   otp: string
 ): Promise<{ success: boolean; message: string }> {
-  const { url, key } = getEnv()
-  const endpoint = `${url}/functions/v1/auth`
   try {
+    const base = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000')
     const response = await fetchWithTimeout(
-      endpoint,
+      `${base}/api/auth/verify-otp`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: key,
-        },
-        body: JSON.stringify({ action: 'verify-otp', phoneNumber, otp }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber, otp }),
       },
       10_000
     )
-
-    const data = (await response.json().catch(() => ({}))) as {
-      success?: boolean
-      message?: string
-      error?: string
-    }
-    if (!response.ok) {
-      return {
-        success: false,
-        message: data.message || data.error || 'OTP verification failed. Please try again.',
-      }
-    }
-
+    const data = (await response.json().catch(() => ({}))) as { success?: boolean; message?: string }
     return {
       success: !!data.success,
-      message: data.message || 'OTP verified successfully.',
+      message: data.message || (data.success ? 'OTP verified successfully.' : 'OTP verification failed. Please try again.'),
     }
   } catch (err) {
     return {
@@ -937,10 +938,10 @@ export type WATITemplate =
   | 'trust_score_update'
 
 /**
- * Send a WhatsApp/WATI notification for key platform events.
+ * Send an SMS notification via Twilio for key platform events.
  * Silently fails — never blocks the main action.
  *
- * @param template - One of the WATI template keys
+ * @param template - One of the notification template keys
  * @param phoneNumber - Worker/employer phone (will be normalised server-side)
  * @param params - Ordered params array matching the template (e.g. [workerName, jobTitle])
  */
@@ -951,19 +952,19 @@ export async function sendWATIAlert(
 ): Promise<void> {
   try {
     if (!phoneNumber) {
-      console.warn(`[WATI] sendWATIAlert skipped — no phone number (template=${template})`)
+      console.warn(`[Twilio] sendWATIAlert skipped — no phone number (template=${template})`)
       return
     }
-    console.log(`[WATI] sendWATIAlert → template=${template}  phone=${phoneNumber}  params=${JSON.stringify(params)}`)
-    const res = await call('wati', 'POST', {}, {
-      action: 'notify',
-      phone: phoneNumber,
-      template,
-      params,
+    console.log(`[Twilio] sendNotification → template=${template}  phone=${phoneNumber}  params=${JSON.stringify(params)}`)
+    const base = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000')
+    const res = await fetch(`${base}/api/notifications/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ template, phoneNumber, params }),
     })
-    console.log('[WATI] sendWATIAlert response:', JSON.stringify(res))
+    console.log('[Twilio] sendNotification response:', res.status)
   } catch (err) {
-    console.error('[WATI] sendWATIAlert failed:', err)
+    console.error('[Twilio] sendNotification failed:', err)
     // Fire-and-forget: never block the UI for notification failures
   }
 }

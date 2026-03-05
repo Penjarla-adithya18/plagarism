@@ -124,7 +124,8 @@ Deno.serve(async (req: Request) => {
       })
       if (trustErr) console.error('Failed to create trust score:', trustErr)
 
-      await supabase.from('user_sessions').delete().eq('user_id', created.id)
+      // Only clean up expired sessions, not all sessions
+      await supabase.from('user_sessions').delete().eq('user_id', created.id).lt('expires_at', new Date().toISOString())
       const session = await createSessionForUser(supabase, created.id)
       return jsonResponse({
         success: true,
@@ -155,7 +156,8 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ success: false, message: 'Invalid phone number or password' })
       }
 
-      await supabase.from('user_sessions').delete().eq('user_id', data.id)
+      // Only delete expired sessions — keep valid sessions on other devices alive
+      await supabase.from('user_sessions').delete().eq('user_id', data.id).lt('expires_at', new Date().toISOString())
       const session = await createSessionForUser(supabase, data.id)
       return jsonResponse({
         success: true,
