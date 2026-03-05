@@ -1426,11 +1426,17 @@ export function VideoSkillAssessment({
                     </>
                   )}
                 </Button>
-              ) : (
-                <Button
-                  onClick={() => {
-                    if (currentSkill.toLowerCase().includes('java')) {
-                      // Skip video assessment for Java — go straight to coding challenge
+              ) : currentSkill.toLowerCase().includes('java') ? (
+                <div className="flex flex-col gap-2 w-full sm:flex-row sm:justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPhase('intro')}
+                    className="gap-2"
+                  >
+                    <Video className="w-4 h-4" /> Video Assessment
+                  </Button>
+                  <Button
+                    onClick={() => {
                       setResults(prev => [...prev, {
                         skill: currentSkill,
                         submitted: false,
@@ -1439,16 +1445,15 @@ export function VideoSkillAssessment({
                         score: undefined,
                       }])
                       startCodingChallenge()
-                    } else {
-                      setPhase('intro')
-                    }
-                  }}
-                  className="gap-2"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                  {currentSkill.toLowerCase().includes('java')
-                    ? 'Skip to Coding Challenge'
-                    : 'Continue to Assessment'}
+                    }}
+                    className="gap-2"
+                  >
+                    <ArrowRight className="w-4 h-4" /> Skip to Coding Challenge
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={() => setPhase('intro')} className="gap-2">
+                  <ArrowRight className="w-4 h-4" /> Continue to Assessment
                 </Button>
               )}
             </DialogFooter>
