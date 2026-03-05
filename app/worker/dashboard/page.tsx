@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   Briefcase,
   TrendingUp,
@@ -30,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function WorkerDashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useI18n();
   const [workerProfile, setWorkerProfile] = useState<WorkerProfile | null>(null);
   const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
   const [recommendedJobs, setRecommendedJobs] = useState<Array<{ job: Job; matchScore: number }>>([]);
@@ -172,8 +174,12 @@ export default function WorkerDashboardPage() {
       <main className="container mx-auto px-4 py-8 pb-28 md:pb-8 space-y-8">
         {/* Welcome Section */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">Welcome back, {user?.fullName}!</h1>
-          <p className="text-muted-foreground">Here's what's happening with your job search</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words" suppressHydrationWarning>
+            {t('worker.dashboard.welcome', { name: user?.fullName || '' })}
+          </h1>
+          <p className="text-muted-foreground" suppressHydrationWarning>
+            {t('worker.dashboard.subtitle')}
+          </p>
         </div>
 
         {/* Profile Completion Alert */}
@@ -184,20 +190,24 @@ export default function WorkerDashboardPage() {
                 <AlertCircle className="w-5 h-5 text-accent" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold mb-1">Complete Your Profile</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Complete your profile to get better AI-powered job recommendations
+                <h3 className="font-semibold mb-1" suppressHydrationWarning>
+                  {t('worker.dashboard.completeProfile')}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3" suppressHydrationWarning>
+                  {t('worker.dashboard.completeProfileDesc')}
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Profile Completeness</span>
+                    <span className="text-muted-foreground" suppressHydrationWarning>
+                      {t('worker.dashboard.profileCompleteness')}
+                    </span>
                     <span className="font-semibold">{profileCompleteness}%</span>
                   </div>
                   <Progress value={profileCompleteness} className="h-2" />
                 </div>
                 <Link href="/worker/profile">
-                  <Button size="sm" className="mt-4">
-                    Complete Profile
+                  <Button size="sm" className="mt-4" suppressHydrationWarning>
+                    {t('worker.dashboard.completeProfileBtn')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
@@ -209,17 +219,19 @@ export default function WorkerDashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Briefcase, label: 'Applications', value: applications.length, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-600 dark:text-blue-400' },
-            { icon: Star, label: 'Trust Score', value: trustScore?.score || 50, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
-            { icon: TrendingUp, label: 'Avg Rating', value: trustScore?.averageRating.toFixed(1) || 'N/A', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-            { icon: CheckCircle2, label: 'Completed Jobs', value: applications.filter(a => a.status === 'completed').length, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-          ].map(({ icon: Icon, label, value, iconBg, iconColor }) => (
-            <div key={label} className="card-modern p-5 transition-smooth hover:-translate-y-0.5 hover:shadow-soft-lg">
+            { icon: Briefcase, labelKey: 'worker.dashboard.stats.applications', value: applications.length, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-600 dark:text-blue-400' },
+            { icon: Star, labelKey: 'worker.dashboard.stats.trustScore', value: trustScore?.score || 50, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
+            { icon: TrendingUp, labelKey: 'worker.dashboard.stats.avgRating', value: trustScore?.averageRating.toFixed(1) || 'N/A', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
+            { icon: CheckCircle2, labelKey: 'worker.dashboard.stats.completedJobs', value: applications.filter(a => a.status === 'completed').length, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
+          ].map(({ icon: Icon, labelKey, value, iconBg, iconColor }) => (
+            <div key={labelKey} className="card-modern p-5 transition-smooth hover:-translate-y-0.5 hover:shadow-soft-lg">
               <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl mb-3 ${iconBg}`}>
                 <Icon className={`w-5 h-5 ${iconColor}`} />
               </div>
               <div className="text-2xl font-extrabold">{value}</div>
-              <div className="text-sm text-muted-foreground mt-0.5">{label}</div>
+              <div className="text-sm text-muted-foreground mt-0.5" suppressHydrationWarning>
+                {t(labelKey)}
+              </div>
             </div>
           ))}
         </div>
@@ -227,9 +239,9 @@ export default function WorkerDashboardPage() {
         {/* Application Activity Chart */}
         {applications.length > 0 && (
           <Card className="card-modern p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" suppressHydrationWarning>
               <TrendingUp className="w-5 h-5 text-primary" />
-              Your Activity (Last 7 Days)
+              {t('worker.dashboard.activity')}
             </h3>
             <SimpleLineChart data={applicationTrendData} color="#6366f1" />
           </Card>
@@ -239,19 +251,19 @@ export default function WorkerDashboardPage() {
         <div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold flex items-center gap-2">
+              <h2 className="text-2xl font-bold flex items-center gap-2" suppressHydrationWarning>
                 <Sparkles className="w-6 h-6 text-primary" />
-                {profileCompleteness === 100 ? 'AI-Powered Recommendations' : 'Recommended Jobs'}
+                {profileCompleteness === 100 ? t('worker.dashboard.aiRecommendations') : t('worker.dashboard.recommendedJobs')}
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-1" suppressHydrationWarning>
                 {profileCompleteness === 100
-                  ? 'Jobs matched to your skills and preferences'
-                  : 'Complete your profile for personalized matches'}
+                  ? t('worker.dashboard.aiRecommendationsDesc')
+                  : t('worker.dashboard.recommendedJobsDesc')}
               </p>
             </div>
             <Link href="/worker/jobs">
-              <Button variant="outline" size="sm">
-                View All Jobs
+              <Button variant="outline" size="sm" suppressHydrationWarning>
+                {t('worker.dashboard.viewAllJobs')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
@@ -261,9 +273,11 @@ export default function WorkerDashboardPage() {
             {recommendedJobs.length === 0 ? (
               <Card className="p-8 col-span-full text-center">
                 <Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">No Jobs Available</h3>
-                <p className="text-sm text-muted-foreground">
-                  Check back later for new opportunities
+                <h3 className="font-semibold mb-2" suppressHydrationWarning>
+                  {t('worker.dashboard.noJobs')}
+                </h3>
+                <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                  {t('worker.dashboard.noJobsDesc')}
                 </p>
               </Card>
             ) : (
@@ -278,8 +292,8 @@ export default function WorkerDashboardPage() {
                       </p>
                     </div>
                     {matchScore > 0 && (
-                      <Badge variant="secondary" className="bg-primary/10 text-primary">
-                        {matchScore}% Match
+                      <Badge variant="secondary" className="bg-primary/10 text-primary" suppressHydrationWarning>
+                        {matchScore}% {t('worker.dashboard.match')}
                       </Badge>
                     )}
                   </div>
@@ -298,8 +312,8 @@ export default function WorkerDashboardPage() {
                       <div className="text-xs text-muted-foreground">{job.timing}</div>
                     </div>
                     <Link href={`/worker/jobs/${job.id}`}>
-                      <Button size="sm">
-                        View Details
+                      <Button size="sm" suppressHydrationWarning>
+                        {t('worker.dashboard.viewDetails')}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>
@@ -314,10 +328,12 @@ export default function WorkerDashboardPage() {
         {applications.length > 0 && (
           <div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-              <h2 className="text-2xl font-bold">Recent Applications</h2>
+              <h2 className="text-2xl font-bold" suppressHydrationWarning>
+                {t('worker.dashboard.recentApplications')}
+              </h2>
               <Link href="/worker/applications">
-                <Button variant="outline" size="sm">
-                  View All
+                <Button variant="outline" size="sm" suppressHydrationWarning>
+                  {t('worker.dashboard.viewAll')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -328,11 +344,11 @@ export default function WorkerDashboardPage() {
                 <Card key={app.id} className="card-modern p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold mb-1">
-                        {jobsMap[app.jobId]?.title ?? `Application #${app.id.slice(-6)}`}
+                      <h3 className="font-semibold mb-1" suppressHydrationWarning>
+                        {t('worker.dashboard.application')} #{app.id.slice(-8)}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Applied {new Date(app.createdAt).toLocaleDateString()}
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                        {t('worker.dashboard.applied')} {new Date(app.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     <Badge

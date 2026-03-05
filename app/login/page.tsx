@@ -8,11 +8,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { loginUser } from '@/lib/auth';
 import { getUserByPhone, getUserByEmail } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const { toast } = useToast();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   // Avoid SSR/client mismatch on theme-sensitive backdrop styles
   const [mounted, setMounted] = useState(false);
@@ -23,8 +25,8 @@ export default function LoginPage() {
       const params = new URLSearchParams(window.location.search)
       if (params.get('reason') === 'session_expired') {
         setTimeout(() => toast({
-          title: 'Session Expired',
-          description: 'Your session has expired. Please log in again.',
+          title: t('auth.login.toast.sessionExpired'),
+          description: t('auth.login.toast.sessionExpiredDesc'),
           variant: 'destructive',
         }), 200)
       }
@@ -45,8 +47,8 @@ export default function LoginPage() {
 
     if (!isEmail && !isPhone) {
       toast({
-        title: 'Invalid Credentials',
-        description: 'Enter a 10-digit phone number or a valid email address',
+        title: t('auth.login.toast.invalidCredentials'),
+        description: t('auth.login.toast.invalidCredentialsDesc'),
         variant: 'destructive',
       });
       return;
@@ -54,8 +56,8 @@ export default function LoginPage() {
 
     if (!formData.password) {
       toast({
-        title: 'Password Required',
-        description: 'Please enter your password',
+        title: t('auth.login.toast.passwordRequired'),
+        description: t('auth.login.toast.passwordRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -72,8 +74,8 @@ export default function LoginPage() {
         const emailUser = await getUserByEmail(identifier);
         if (!emailUser) {
           toast({
-            title: 'Account Not Found',
-            description: 'No account is linked to this email address.',
+            title: t('auth.login.toast.accountNotFound'),
+            description: t('auth.login.toast.emailNotFound'),
             variant: 'destructive',
           });
           return;
@@ -91,8 +93,8 @@ export default function LoginPage() {
         }
         if (existingUser === null) {
           toast({
-            title: 'Account Not Found',
-            description: 'No account exists for this number. You must sign up first.',
+            title: t('auth.login.toast.accountNotFound'),
+            description: t('auth.login.toast.phoneNotFound'),
             variant: 'destructive',
           });
           return;
@@ -109,8 +111,8 @@ export default function LoginPage() {
         login(result.user);
         
         toast({
-          title: 'Login Successful',
-          description: `Welcome back, ${result.user.fullName}!`,
+          title: t('auth.login.toast.loginSuccess'),
+          description: t('auth.login.toast.welcomeBack', { name: result.user.fullName }),
         });
 
         // Small delay to ensure state is persisted before navigation
@@ -132,15 +134,15 @@ export default function LoginPage() {
           message.includes('does not exist')
         ) {
           toast({
-            title: 'Account Not Found',
-            description: 'No account exists for this number. You must sign up first.',
+            title: t('auth.login.toast.accountNotFound'),
+            description: t('auth.login.toast.phoneNotFound'),
             variant: 'destructive',
           });
           return;
         }
 
         toast({
-          title: 'Login Failed',
+          title: t('auth.login.toast.loginFailed'),
           description: result.message,
           variant: 'destructive',
         });
@@ -148,7 +150,7 @@ export default function LoginPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
       toast({
-        title: 'Error',
+        title: t('auth.login.toast.error'),
         description: message,
         variant: 'destructive',
       });
@@ -179,20 +181,10 @@ export default function LoginPage() {
 
           <div className="z-10 mt-4 max-w-md md:mt-0">
             <h1 className="mb-6 text-5xl font-bold leading-[1.05] text-slate-900 md:text-6xl dark:text-white">
-              Welcome to <br />
-              your <br />
-              <span className="relative inline-block text-emerald-500 dark:text-emerald-400">
-                neighborhood
-                <svg className="absolute -bottom-1 left-0 -z-10 h-3 w-full text-blue-200 dark:text-blue-900/70" viewBox="0 0 100 10" preserveAspectRatio="none">
-                  <path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" strokeWidth="8" />
-                </svg>
-              </span>{' '}
-              <br />
-              workspace.
+              {t('auth.login.leftTitle')}
             </h1>
             <p className="mb-10 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-              Connect with local opportunities that matter. Whether you&apos;re hiring or looking for work,
-              start right here in your community.
+              {t('auth.login.leftSubtitle')}
             </p>
 
             <div className="relative mt-8 hidden h-56 w-full md:block">
@@ -213,17 +205,17 @@ export default function LoginPage() {
           style={mounted ? { backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)' } : undefined}
         >
           <Link href="/" className="mb-4 inline-flex items-center self-start text-sm font-medium text-slate-500 transition-colors hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 md:absolute md:left-8 md:top-8 md:mb-0">
-            ← Back to Home
+            ← {t('auth.backHome')}
           </Link>
           <div className="w-full max-w-sm space-y-6 sm:space-y-7">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Sign in</h2>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('auth.login.title')}</h2>
             </div>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               <div className="space-y-6">
                 <div>
-                  <label className="sr-only" htmlFor="identifier">Phone or Email</label>
+                  <label className="sr-only" htmlFor="identifier">{t('auth.login.identifier')}</label>
                   <div className="group relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       {formData.identifier.includes('@')
@@ -234,7 +226,7 @@ export default function LoginPage() {
                       id="identifier"
                       type="text"
                       name="identifier"
-                      placeholder="Phone number or email address"
+                      placeholder={t('auth.login.identifier')}
                       value={formData.identifier}
                       onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                       className="relative block w-full appearance-none border-0 border-b-2 border-gray-200 bg-transparent px-3 py-4 pl-10 text-gray-900 placeholder-gray-400 transition-colors focus:z-10 focus:border-emerald-500 focus:outline-none focus:ring-0 sm:text-lg dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500"
@@ -244,7 +236,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="sr-only" htmlFor="password">Password</label>
+                  <label className="sr-only" htmlFor="password">{t('auth.passwordLabel')}</label>
                   <div className="group relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <Lock className="h-5 w-5 text-gray-400 transition-colors group-focus-within:text-emerald-500" />
@@ -253,7 +245,7 @@ export default function LoginPage() {
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Password"
+                      placeholder={t('auth.passwordPh')}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="relative block w-full appearance-none border-0 border-b-2 border-gray-200 bg-transparent px-3 py-4 pl-10 text-gray-900 placeholder-gray-400 transition-colors focus:z-10 focus:border-emerald-500 focus:outline-none focus:ring-0 sm:text-lg dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500"
@@ -275,12 +267,12 @@ export default function LoginPage() {
                 <div className="flex items-center">
                   <input className="h-4 w-4 cursor-pointer rounded border-gray-300 text-emerald-500 focus:ring-emerald-500" id="remember-me" name="remember-me" type="checkbox" />
                   <label className="ml-2 block cursor-pointer text-sm text-gray-600 dark:text-slate-300" htmlFor="remember-me">
-                    Remember me
+                    {t('auth.login.rememberMe')}
                   </label>
                 </div>
                 <div className="text-sm">
                   <Link className="font-medium text-gray-500 transition-colors hover:text-emerald-500 dark:text-slate-400" href="/forgot-password">
-                    Forgot password?
+                    {t('auth.login.forgotPw')}
                   </Link>
                 </div>
               </div>
@@ -298,14 +290,14 @@ export default function LoginPage() {
                       <LogIn className="h-5 w-5 text-emerald-100 group-hover:text-white" />
                     )}
                   </span>
-                  {loading ? 'Logging in...' : 'LOG IN'}
+                  {loading ? t('auth.login.loading') : t('auth.login.btn')}
                 </button>
               </div>
 
               <p className="text-center text-sm text-gray-500 dark:text-slate-400">
-                New to HyperLocal?{' '}
+                {t('auth.login.newUser')}{' '}
                 <Link className="font-medium text-emerald-500 transition-colors hover:text-blue-500" href="/signup">
-                  Create an account
+                  {t('auth.login.createAccount')}
                 </Link>
               </p>
             </form>

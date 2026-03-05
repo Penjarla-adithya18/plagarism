@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface RatingTarget {
   jobId: string
@@ -33,6 +34,7 @@ export default function WorkerApplicationsPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
+  const { t } = useI18n()
   const [applications, setApplications] = useState<Application[]>([])
   const [jobsById, setJobsById] = useState<Record<string, Job>>({})
   const [loading, setLoading] = useState(true)
@@ -102,10 +104,10 @@ export default function WorkerApplicationsPage() {
       })
       setRatedJobIds(prev => new Set([...prev, ratingTarget.jobId]))
       setRatingOpen(false)
-      toast({ title: 'Rating submitted', description: 'Thank you for your feedback!' })
+      toast({ title: t('worker.applications.ratingSuccess'), description: t('worker.applications.ratingSuccessDesc') })
     } catch (err) {
       toast({
-        title: 'Failed to submit rating',
+        title: t('worker.applications.ratingFailed'),
         description: err instanceof Error ? err.message : 'Please try again.',
         variant: 'destructive',
       })
@@ -132,8 +134,8 @@ export default function WorkerApplicationsPage() {
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <CardTitle className="text-xl mb-2">{job.title}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Applied {new Date(application.createdAt).toLocaleDateString()}
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {t('worker.applications.applied')} {new Date(application.createdAt).toLocaleDateString()}
               </p>
             </div>
             <Badge variant={
@@ -141,8 +143,8 @@ export default function WorkerApplicationsPage() {
               application.status === 'rejected' ? 'destructive' :
               application.status === 'completed' ? 'default' :
               'secondary'
-            } className={application.status === 'completed' ? 'bg-green-100 text-green-700 border-green-200' : ''}>
-              {application.status}
+            } className={application.status === 'completed' ? 'bg-green-100 text-green-700 border-green-200' : ''} suppressHydrationWarning>
+              {t(`worker.applications.${application.status}`)}
             </Badge>
           </div>
         </CardHeader>
@@ -156,7 +158,7 @@ export default function WorkerApplicationsPage() {
             </div>
             <div className="flex items-center gap-2 text-sm">
               <IndianRupee className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">₹{job.payAmount}/{job.payType === 'hourly' ? 'hr' : 'fixed'}</span>
+              <span className="font-semibold" suppressHydrationWarning>₹{job.payAmount}/{job.payType === 'hourly' ? t('worker.applications.hourly') : t('worker.applications.fixed')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -170,7 +172,7 @@ export default function WorkerApplicationsPage() {
 
           {application.coverLetter && (
             <div className="mb-4 p-3 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Your Cover Letter:</p>
+              <p className="text-sm text-muted-foreground mb-1" suppressHydrationWarning>{t('worker.applications.coverLetter')}</p>
               <p className="text-sm line-clamp-2">{application.coverLetter}</p>
             </div>
           )}
@@ -180,16 +182,17 @@ export default function WorkerApplicationsPage() {
               variant="outline"
               className="flex-1"
               onClick={() => router.push(`/worker/jobs/${job.id}`)}
+              suppressHydrationWarning
             >
               <Eye className="h-4 w-4 mr-2" />
-              View Job Details
+              {t('worker.applications.viewJob')}
             </Button>
 
             {isCompleted && (
               alreadyRated ? (
-                <Button variant="ghost" size="sm" disabled className="gap-1 text-yellow-500">
+                <Button variant="ghost" size="sm" disabled className="gap-1 text-yellow-500" suppressHydrationWarning>
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  Rated
+                  {t('worker.applications.rated')}
                 </Button>
               ) : (
                 <Button
@@ -202,9 +205,10 @@ export default function WorkerApplicationsPage() {
                     employerId: job.employerId,
                     jobTitle: job.title,
                   })}
+                  suppressHydrationWarning
                 >
                   <Star className="h-4 w-4" />
-                  Rate Employer
+                  {t('worker.applications.rateEmployer')}
                 </Button>
               )
             )}
@@ -261,23 +265,23 @@ export default function WorkerApplicationsPage() {
       
       <main className="container mx-auto px-4 py-6 md:py-8 pb-28 md:pb-8">
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">My Applications</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Track your job applications and their status</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2" suppressHydrationWarning>{t('worker.applications.title')}</h1>
+          <p className="text-sm md:text-base text-muted-foreground" suppressHydrationWarning>{t('worker.applications.subtitle')}</p>
         </div>
 
         <Tabs defaultValue="pending" className="w-full">
           <TabsList className="mb-6 w-full flex-wrap">
-            <TabsTrigger value="pending" className="flex-1 min-w-[90px]">
-              <span className="hidden sm:inline">Pending</span><span className="sm:hidden">Pend.</span> ({pendingApps.length})
+            <TabsTrigger value="pending" className="flex-1 min-w-[90px]" suppressHydrationWarning>
+              <span className="hidden sm:inline">{t('worker.applications.pending')}</span><span className="sm:hidden">{t('worker.applications.pending')}</span> ({pendingApps.length})
             </TabsTrigger>
-            <TabsTrigger value="accepted" className="flex-1 min-w-[90px]">
-              <span className="hidden sm:inline">Accepted</span><span className="sm:hidden">Accept.</span> ({acceptedApps.length})
+            <TabsTrigger value="accepted" className="flex-1 min-w-[90px]" suppressHydrationWarning>
+              <span className="hidden sm:inline">{t('worker.applications.accepted')}</span><span className="sm:hidden">{t('worker.applications.accepted')}</span> ({acceptedApps.length})
             </TabsTrigger>
-            <TabsTrigger value="rejected" className="flex-1 min-w-[90px]">
-              <span className="hidden sm:inline">Rejected</span><span className="sm:hidden">Reject.</span> ({rejectedApps.length})
+            <TabsTrigger value="rejected" className="flex-1 min-w-[90px]" suppressHydrationWarning>
+              <span className="hidden sm:inline">{t('worker.applications.rejected')}</span><span className="sm:hidden">{t('worker.applications.rejected')}</span> ({rejectedApps.length})
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex-1 min-w-[90px]">
-              <span className="hidden sm:inline">Completed</span><span className="sm:hidden">Done</span> ({completedApps.length})
+            <TabsTrigger value="completed" className="flex-1 min-w-[90px]" suppressHydrationWarning>
+              <span className="hidden sm:inline">{t('worker.applications.completed')}</span><span className="sm:hidden">{t('worker.applications.completed')}</span> ({completedApps.length})
             </TabsTrigger>
           </TabsList>
 
@@ -286,10 +290,10 @@ export default function WorkerApplicationsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Pending Applications</h3>
-                  <p className="text-muted-foreground mb-4">Browse jobs and apply to opportunities</p>
-                  <Button onClick={() => router.push('/worker/jobs')}>
-                    Browse Jobs
+                  <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.applications.noPending')}</h3>
+                  <p className="text-muted-foreground mb-4" suppressHydrationWarning>{t('worker.applications.noPendingDesc')}</p>
+                  <Button onClick={() => router.push('/worker/jobs')} suppressHydrationWarning>
+                    {t('worker.applications.browseJobs')}
                   </Button>
                 </CardContent>
               </Card>
@@ -306,7 +310,7 @@ export default function WorkerApplicationsPage() {
             {acceptedApps.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No accepted applications yet</p>
+                  <p className="text-muted-foreground" suppressHydrationWarning>{t('worker.applications.noAccepted')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -322,7 +326,7 @@ export default function WorkerApplicationsPage() {
             {rejectedApps.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No rejected applications</p>
+                  <p className="text-muted-foreground" suppressHydrationWarning>{t('worker.applications.noRejected')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -339,8 +343,8 @@ export default function WorkerApplicationsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                  <h3 className="text-lg font-semibold mb-2">No Completed Jobs Yet</h3>
-                  <p className="text-muted-foreground">Jobs you finish will appear here</p>
+                  <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.applications.noCompleted')}</h3>
+                  <p className="text-muted-foreground" suppressHydrationWarning>{t('worker.applications.noCompletedDesc')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -358,13 +362,13 @@ export default function WorkerApplicationsPage() {
       <Dialog open={ratingOpen} onOpenChange={setRatingOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2" suppressHydrationWarning>
               <Star className="h-5 w-5 text-yellow-500" />
-              Rate Employer
+              {t('worker.applications.ratingTitle')}
             </DialogTitle>
             {ratingTarget && (
-              <p className="text-sm text-muted-foreground mt-1">
-                How was your experience with the employer for <strong>{ratingTarget.jobTitle}</strong>?
+              <p className="text-sm text-muted-foreground mt-1" suppressHydrationWarning>
+                {t('worker.applications.ratingDesc', { jobTitle: ratingTarget.jobTitle })}
               </p>
             )}
           </DialogHeader>
@@ -391,15 +395,15 @@ export default function WorkerApplicationsPage() {
                 </button>
               ))}
             </div>
-            <p className="text-center text-sm text-muted-foreground h-4">
+            <p className="text-center text-sm text-muted-foreground h-4" suppressHydrationWarning>
               {(hoverRating || ratingValue) > 0 && (
-                ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][hoverRating || ratingValue]
+                ['', t('worker.applications.ratingPoor'), t('worker.applications.ratingFair'), t('worker.applications.ratingGood'), t('worker.applications.ratingVeryGood'), t('worker.applications.ratingExcellent')][hoverRating || ratingValue]
               )}
             </p>
 
             {/* Feedback */}
             <Textarea
-              placeholder="Share your experience (optional)"
+              placeholder={t('worker.applications.feedbackPlaceholder')}
               value={ratingFeedback}
               onChange={(e) => setRatingFeedback(e.target.value)}
               rows={3}
@@ -409,16 +413,17 @@ export default function WorkerApplicationsPage() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setRatingOpen(false)} disabled={submittingRating}>
-              Cancel
+            <Button variant="outline" onClick={() => setRatingOpen(false)} disabled={submittingRating} suppressHydrationWarning>
+              {t('worker.applications.cancel')}
             </Button>
             <Button
               onClick={handleSubmitRating}
               disabled={ratingValue === 0 || submittingRating}
               className="gap-1"
+              suppressHydrationWarning
             >
               <Star className="h-4 w-4" />
-              {submittingRating ? 'Submitting…' : 'Submit Rating'}
+              {submittingRating ? t('worker.applications.submitting') : t('worker.applications.submitRating')}
             </Button>
           </DialogFooter>
         </DialogContent>

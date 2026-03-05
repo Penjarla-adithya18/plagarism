@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import { escrowOps, applicationOps, jobOps } from '@/lib/api'
 import { EscrowTransaction, Job } from '@/lib/types'
 import {
@@ -54,6 +55,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function WorkerEarningsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const { t } = useI18n()
 
   const [escrowTxns, setEscrowTxns] = useState<EscrowTransaction[]>([])
   const [jobsById, setJobsById] = useState<Record<string, Job>>({})
@@ -172,19 +174,19 @@ export default function WorkerEarningsPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Wallet className="h-6 w-6 text-primary" />
-              Earnings Dashboard
+              <span suppressHydrationWarning>{t('worker.earnings.title')}</span>
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">Track your income, pending payments, and growth</p>
+            <p className="text-muted-foreground text-sm mt-1" suppressHydrationWarning>{t('worker.earnings.subtitle')}</p>
           </div>
           <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Time period" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
+              <SelectItem value="all">{t('worker.earnings.allTime')}</SelectItem>
+              <SelectItem value="month">{t('worker.earnings.thisMonth')}</SelectItem>
+              <SelectItem value="3months">{t('worker.earnings.last3Months')}</SelectItem>
+              <SelectItem value="6months">{t('worker.earnings.last6Months')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -203,7 +205,7 @@ export default function WorkerEarningsPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Earned</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.earnings.totalEarned')}</p>
                       <p className="text-2xl font-bold">{fmtCurrency(metrics.totalEarned)}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
@@ -211,13 +213,13 @@ export default function WorkerEarningsPage() {
                     </div>
                   </div>
                   {metrics.growthPct !== 0 && (
-                    <div className={`flex items-center gap-1 mt-2 text-xs ${metrics.growthPct > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`flex items-center gap-1 mt-2 text-xs ${metrics.growthPct > 0 ? 'text-green-600' : 'text-red-600'}`} suppressHydrationWarning>
                       {metrics.growthPct > 0 ? (
                         <ArrowUpRight className="h-3 w-3" />
                       ) : (
                         <ArrowDownRight className="h-3 w-3" />
                       )}
-                      {Math.abs(metrics.growthPct).toFixed(1)}% vs last month
+                      {Math.abs(metrics.growthPct).toFixed(1)}% {t('worker.earnings.vsLastMonth')}
                     </div>
                   )}
                 </CardContent>
@@ -227,14 +229,14 @@ export default function WorkerEarningsPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">This Month</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.earnings.thisMonthCard')}</p>
                       <p className="text-2xl font-bold">{fmtCurrency(metrics.thisMonthEarned)}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                       <Calendar className="h-6 w-6 text-blue-600" />
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">{metrics.jobCount} jobs completed</p>
+                  <p className="text-xs text-muted-foreground mt-2" suppressHydrationWarning>{metrics.jobCount} {t(metrics.jobCount === 1 ? 'worker.earnings.jobCompleted' : 'worker.earnings.jobsCompleted')}</p>
                 </CardContent>
               </Card>
 
@@ -242,14 +244,14 @@ export default function WorkerEarningsPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">In Escrow (Held)</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.earnings.inEscrow')}</p>
                       <p className="text-2xl font-bold">{fmtCurrency(metrics.totalHeld)}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
                       <Clock className="h-6 w-6 text-yellow-600" />
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Will be released on job completion</p>
+                  <p className="text-xs text-muted-foreground mt-2" suppressHydrationWarning>{t('worker.earnings.escrowNote')}</p>
                 </CardContent>
               </Card>
 
@@ -257,17 +259,17 @@ export default function WorkerEarningsPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Platform Commission</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.earnings.platformCommission')}</p>
                       <p className="text-2xl font-bold">{fmtCurrency(metrics.totalCommission)}</p>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
                       <TrendingUp className="h-6 w-6 text-purple-600" />
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-muted-foreground mt-2" suppressHydrationWarning>
                     {metrics.totalEarned + metrics.totalCommission > 0
-                      ? `${((metrics.totalCommission / (metrics.totalEarned + metrics.totalCommission)) * 100).toFixed(1)}% effective rate`
-                      : 'No commissions yet'}
+                      ? `${((metrics.totalCommission / (metrics.totalEarned + metrics.totalCommission)) * 100).toFixed(1)}% ${t('worker.earnings.effectiveRate')}`
+                      : t('worker.earnings.noCommissions')}
                   </p>
                 </CardContent>
               </Card>
@@ -276,25 +278,25 @@ export default function WorkerEarningsPage() {
             {/* ── Tabs: Transactions / Monthly Breakdown ── */}
             <Tabs defaultValue="transactions" className="w-full">
               <TabsList>
-                <TabsTrigger value="transactions">Recent Transactions</TabsTrigger>
-                <TabsTrigger value="monthly">Monthly Breakdown</TabsTrigger>
+                <TabsTrigger value="transactions">{t('worker.earnings.recentTransactions')}</TabsTrigger>
+                <TabsTrigger value="monthly">{t('worker.earnings.monthlyBreakdown')}</TabsTrigger>
               </TabsList>
 
               {/* ── Transactions Table ── */}
               <TabsContent value="transactions">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Payment History</CardTitle>
-                    <CardDescription>{filteredTxns.length} transaction{filteredTxns.length !== 1 && 's'}</CardDescription>
+                    <CardTitle className="text-lg" suppressHydrationWarning>{t('worker.earnings.paymentHistory')}</CardTitle>
+                    <CardDescription suppressHydrationWarning>{filteredTxns.length} {t(filteredTxns.length === 1 ? 'worker.earnings.transaction' : 'worker.earnings.transactions')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {filteredTxns.length === 0 ? (
                       <div className="py-12 text-center">
                         <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-semibold mb-2">No Transactions Yet</h3>
-                        <p className="text-muted-foreground mb-4">Complete jobs to start earning!</p>
+                        <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.earnings.noTransactions')}</h3>
+                        <p className="text-muted-foreground mb-4" suppressHydrationWarning>{t('worker.earnings.noTransactionsDesc')}</p>
                         <Button onClick={() => router.push('/worker/jobs')}>
-                          <Briefcase className="h-4 w-4 mr-2" /> Browse Jobs
+                          <Briefcase className="h-4 w-4 mr-2" /> <span suppressHydrationWarning>{t('worker.earnings.browseJobs')}</span>
                         </Button>
                       </div>
                     ) : (
@@ -302,12 +304,12 @@ export default function WorkerEarningsPage() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b text-left text-muted-foreground">
-                              <th className="pb-3 font-medium">Job</th>
-                              <th className="pb-3 font-medium">Amount</th>
-                              <th className="pb-3 font-medium">Commission</th>
-                              <th className="pb-3 font-medium">Net</th>
-                              <th className="pb-3 font-medium">Status</th>
-                              <th className="pb-3 font-medium">Date</th>
+                              <th className="pb-3 font-medium" suppressHydrationWarning>{t('worker.earnings.job')}</th>
+                              <th className="pb-3 font-medium" suppressHydrationWarning>{t('worker.earnings.amount')}</th>
+                              <th className="pb-3 font-medium" suppressHydrationWarning>{t('worker.earnings.commission')}</th>
+                              <th className="pb-3 font-medium" suppressHydrationWarning>{t('worker.earnings.net')}</th>
+                              <th className="pb-3 font-medium" suppressHydrationWarning>{t('worker.earnings.status')}</th>
+                              <th className="pb-3 font-medium" suppressHydrationWarning>{t('worker.earnings.date')}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -328,8 +330,8 @@ export default function WorkerEarningsPage() {
                                     </td>
                                     <td className="py-3 pr-4 font-semibold">{fmtCurrency(net)}</td>
                                     <td className="py-3 pr-4">
-                                      <Badge variant="outline" className={STATUS_COLOR[txn.status] ?? ''}>
-                                        {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
+                                      <Badge variant="outline" className={STATUS_COLOR[txn.status] ?? ''} suppressHydrationWarning>
+                                        {t(`worker.earnings.${txn.status}`)}
                                       </Badge>
                                     </td>
                                     <td className="py-3 text-muted-foreground whitespace-nowrap">
@@ -354,15 +356,15 @@ export default function WorkerEarningsPage() {
               <TabsContent value="monthly">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Monthly Breakdown</CardTitle>
-                    <CardDescription>Earnings summarised by month</CardDescription>
+                    <CardTitle className="text-lg" suppressHydrationWarning>{t('worker.earnings.monthlyBreakdownTitle')}</CardTitle>
+                    <CardDescription suppressHydrationWarning>{t('worker.earnings.monthlyBreakdownDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {monthlyBreakdown.length === 0 ? (
                       <div className="py-12 text-center">
                         <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-semibold mb-2">No Earnings Data</h3>
-                        <p className="text-muted-foreground">Completed jobs will show up here.</p>
+                        <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.earnings.noEarningsData')}</h3>
+                        <p className="text-muted-foreground" suppressHydrationWarning>{t('worker.earnings.noEarningsDataDesc')}</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -373,12 +375,12 @@ export default function WorkerEarningsPage() {
                           >
                             <div>
                               <p className="font-medium">{m.label}</p>
-                              <p className="text-xs text-muted-foreground">{m.count} job{m.count !== 1 && 's'} completed</p>
+                              <p className="text-xs text-muted-foreground" suppressHydrationWarning>{m.count} {t(m.count === 1 ? 'worker.earnings.jobCompleted' : 'worker.earnings.jobsCompleted')}</p>
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-lg">{fmtCurrency(m.earned)}</p>
                               {m.commission > 0 && (
-                                <p className="text-xs text-muted-foreground">Commission: {fmtCurrency(m.commission)}</p>
+                                <p className="text-xs text-muted-foreground" suppressHydrationWarning>{t('worker.earnings.commissionLabel')} {fmtCurrency(m.commission)}</p>
                               )}
                             </div>
                           </div>

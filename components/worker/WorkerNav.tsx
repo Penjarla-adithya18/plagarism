@@ -65,9 +65,10 @@ export function WorkerNav() {
                         'gap-2 transition-smooth',
                         isActive && 'bg-primary shadow-sm'
                       )}
+                      suppressHydrationWarning
                     >
                       <item.icon className="w-4 h-4" />
-                      {item.label}
+                      <span suppressHydrationWarning>{item.label}</span>
                       {item.badge !== undefined && item.badge > 0 && (
                         <Badge variant="destructive" className="ml-1 px-1.5 py-0.5 text-xs">
                           {item.badge}
@@ -89,9 +90,10 @@ export function WorkerNav() {
                         'gap-2 transition-smooth',
                         isActive && 'bg-primary shadow-sm'
                       )}
+                      suppressHydrationWarning
                     >
                       <item.icon className="w-4 h-4" />
-                      {item.label}
+                      <span suppressHydrationWarning>{item.label}</span>
                     </Button>
                   </Link>
                 );
@@ -116,10 +118,11 @@ export function WorkerNav() {
                 size="sm"
                 onClick={logout}
                 className="gap-2 touch-target"
-                title="Logout"
+                title={t('nav.logout')}
+                suppressHydrationWarning
               >
                 <LogOut className="w-4 h-4" />
-                <span>Logout</span>
+                <span suppressHydrationWarning>{t('nav.logout')}</span>
               </Button>
             </div>
 
@@ -146,16 +149,16 @@ export function WorkerNav() {
             <div className="space-y-2">
               {secondaryNavItems.map((item) => (
                 <Link key={item.href} href={item.href} prefetch={false} onClick={() => setShowMenu(false)}>
-                  <Button variant="ghost" className="w-full justify-start gap-3 touch-target">
+                  <Button variant="ghost" className="w-full justify-start gap-3 touch-target" suppressHydrationWarning>
                     <item.icon className="w-4 h-4" />
-                    {item.label}
+                    <span suppressHydrationWarning>{item.label}</span>
                   </Button>
                 </Link>
               ))}
               <Link href="/worker/profile" prefetch={false} onClick={() => setShowMenu(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-3 touch-target">
+                <Button variant="ghost" className="w-full justify-start gap-3 touch-target" suppressHydrationWarning>
                   <User className="w-4 h-4" />
-                  {t('nav.profile')}
+                  <span suppressHydrationWarning>{t('nav.profile')}</span>
                 </Button>
               </Link>
               <div className="border-t pt-2">
@@ -163,9 +166,10 @@ export function WorkerNav() {
                   variant="ghost"
                   onClick={() => { logout(); setShowMenu(false); }}
                   className="w-full justify-start gap-3 touch-target text-destructive"
+                  suppressHydrationWarning
                 >
                   <LogOut className="w-4 h-4" />
-                  Logout
+                  <span suppressHydrationWarning>{t('nav.logout')}</span>
                 </Button>
               </div>
             </div>

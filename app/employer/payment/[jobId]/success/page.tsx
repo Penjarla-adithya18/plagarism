@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { db } from '@/lib/api'
 import { Job } from '@/lib/types'
+import { useI18n } from '@/contexts/I18nContext'
 import {
   CheckCircle2,
   Copy,
@@ -34,6 +35,7 @@ export default function PaymentSuccessPage() {
   const [paidAt, setPaidAt] = useState('')
   const [copied, setCopied] = useState(false)
   const [activating, setActivating] = useState(true)
+  const { t } = useI18n()
 
   useEffect(() => {
     if (calledRef.current) return
@@ -78,7 +80,7 @@ export default function PaymentSuccessPage() {
     return (
       <div className="app-surface flex items-center justify-center flex-col gap-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-muted-foreground">Activating your job posting…</p>
+        <p className="text-muted-foreground">{t('employer.paymentSuccess.activating')}</p>
       </div>
     )
   }
@@ -95,15 +97,15 @@ export default function PaymentSuccessPage() {
             {/* Pulse ring */}
             <span className="absolute inset-0 rounded-full animate-ping bg-green-200 opacity-40" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Payment Successful!</h1>
-          <p className="text-slate-500 text-sm">Your job is now live and visible to workers</p>
+          <h1 className="text-2xl font-bold text-slate-800">{t('employer.paymentSuccess.title')}</h1>
+          <p className="text-slate-500 text-sm">{t('employer.paymentSuccess.subtitle')}</p>
         </div>
 
         {/* Transaction card */}
         <Card className="border-green-200 shadow-lg">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-500">Amount Paid</span>
+              <span className="text-sm text-slate-500">{t('employer.paymentSuccess.amountPaid')}</span>
               <span className="text-2xl font-bold text-green-700">₹{total.toLocaleString()}</span>
             </div>
 
@@ -111,7 +113,7 @@ export default function PaymentSuccessPage() {
 
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between text-slate-600">
-                <span>Transaction ID</span>
+                <span>{t('employer.paymentSuccess.transactionId')}</span>
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono text-xs font-semibold text-slate-800">{txnId}</span>
                   <button onClick={handleCopy} className="text-primary hover:text-primary/80">
@@ -120,17 +122,17 @@ export default function PaymentSuccessPage() {
                 </div>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Date &amp; Time</span>
+                <span>{t('employer.paymentSuccess.dateTime')}</span>
                 <span className="text-slate-800">{paidAt}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Payment For</span>
+                <span>{t('employer.paymentSuccess.paymentFor')}</span>
                 <span className="text-slate-800 text-right max-w-[55%] truncate">{job?.title}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Escrow Status</span>
+                <span>{t('employer.paymentSuccess.escrowStatus')}</span>
                 <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
-                  🔒 Locked
+                  🔒 {t('employer.paymentSuccess.locked')}
                 </Badge>
               </div>
             </div>
@@ -139,13 +141,13 @@ export default function PaymentSuccessPage() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 space-y-1">
               <p className="font-semibold flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5" /> What happens next?
+                <Shield className="w-3.5 h-3.5" /> {t('employer.paymentSuccess.nextTitle')}
               </p>
               <ol className="list-decimal list-inside space-y-0.5 text-blue-700">
-                <li>Workers can now see and apply to your job</li>
-                <li>Review applications and accept a worker</li>
-                <li>Worker completes the job</li>
-                <li>Confirm completion → payment released (minus 10% platform fee)</li>
+                <li>{t('employer.paymentSuccess.next1')}</li>
+                <li>{t('employer.paymentSuccess.next2')}</li>
+                <li>{t('employer.paymentSuccess.next3')}</li>
+                <li>{t('employer.paymentSuccess.next4')}</li>
               </ol>
             </div>
           </CardContent>
@@ -154,7 +156,7 @@ export default function PaymentSuccessPage() {
         {/* Receipt download hint */}
         <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
           <Calendar className="w-3 h-3" />
-          <span>A receipt has been sent to your registered number</span>
+          <span>{t('employer.paymentSuccess.receiptSent')}</span>
         </div>
 
         {/* CTAs */}
@@ -162,18 +164,18 @@ export default function PaymentSuccessPage() {
           <Link href={`/employer/jobs/${jobId}`}>
             <Button className="w-full gap-2 bg-primary hover:bg-primary/90">
               <Briefcase className="w-4 h-4" />
-              View Job Posting
+              {t('employer.paymentSuccess.viewJob')}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
           <Link href="/employer/jobs/post">
             <Button variant="outline" className="w-full gap-2">
-              Post Another Job
+              {t('employer.paymentSuccess.postAnother')}
             </Button>
           </Link>
           <Link href="/employer/dashboard">
             <Button variant="ghost" className="w-full text-slate-500">
-              Go to Dashboard
+              {t('employer.paymentSuccess.goDashboard')}
             </Button>
           </Link>
         </div>
