@@ -12,16 +12,17 @@ import {
   Camera,
   CheckCircle2,
   Loader2,
-  Video,
-  WifiOff,
   AlertTriangle,
   Upload,
+  Users,
+  MonitorOff,
+  UserX,
+  ShieldCheck,
 } from 'lucide-react'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const RECORDING_TIME_S = 65 // slightly longer than primary (60s) to ensure full coverage
-const SUPABASE_URL = 'https://yecelpnlaruavifzxunw.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllY2VscG5sYXJ1YXZpZnp4dW53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2Njk5MTksImV4cCI6MjA4NzI0NTkxOX0.MaoAJIec30GfrQolYQKJ4dnvmIxTW7t0DbM_tS8xYVk'
+const RECORDING_TIME_S = 65
+const DETECT_INTERVAL_MS = 2500
 
 type Status =
   | 'connecting'
@@ -34,6 +35,37 @@ type Status =
   | 'assessment-ended'
   | 'error'
 
+type DetectionState = 'loading' | 'ok' | 'no-person' | 'multiple' | 'no-laptop' | 'neither'
+
+const DETECTION_UI: Record<DetectionState, { color: string; icon: React.ReactNode; text: string; sub: string } | null> = {
+  loading: null,
+  ok: null,
+  'no-person': {
+    color: 'bg-red-600/90',
+    icon: <UserX className="w-4 h-4 text-white flex-shrink-0" />,
+    text: '⚠️ Only laptop detected — no person in frame!',
+    sub: 'Move so your upper body is clearly visible.',
+  },
+  multiple: {
+    color: 'bg-red-700/90',
+    icon: <Users className="w-4 h-4 text-white flex-shrink-0" />,
+    text: '🚫 Multiple people detected!',
+    sub: 'Only ONE person is allowed during the assessment.',
+  },
+  'no-laptop': {
+    color: 'bg-amber-500/90',
+    icon: <MonitorOff className="w-4 h-4 text-white flex-shrink-0" />,
+    text: '⚠️ Laptop not visible in frame',
+    sub: 'Adjust so the laptop screen is clearly visible.',
+  },
+  neither: {
+    color: 'bg-orange-600/90',
+    icon: <AlertTriangle className="w-4 h-4 text-white flex-shrink-0" />,
+    text: '⚠️ Nothing detected — adjust camera angle',
+    sub: 'Ensure laptop screen AND person upper body are in view.',
+  },
+}
+
 function EnvCamContent() {
   const params = useSearchParams()
   const session = params.get('session') ?? ''
@@ -43,38 +75,109 @@ function EnvCamContent() {
   const [status, setStatus] = useState<Status>('connecting')
   const [timer, setTimer] = useState(RECORDING_TIME_S)
   const [error, setError] = useState('')
-  const [envVideoUrl, setEnvVideoUrl] = useState('')
+  const [detection, setDetection] = useState<DetectionState>('loading')
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const detectorRef = useRef<any>(null)
+  const detectIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
-  // ── Start rear camera ──────────────────────────────────────────────────────
+  // ── Load MediaPipe ObjectDetector (≈ 5 MB model from CDN) ─────────────────
+  const loadDetector = useCallback(async () => {
+    try {
+      const { FilesetResolver, ObjectDetector } = await import('@mediapipe/tasks-vision')
+      const vision = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm'
+      )
+      detectorRef.current = await ObjectDetector.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite',
+          delegate: 'GPU',
+        },
+        scoreThreshold: 0.38,
+        runningMode: 'IMAGE',
+        maxResults: 10,
+      })
+      console.log('[env-cam] ObjectDetector ready')
+      // Run first detection immediately after model loads
+      setTimeout(runDetectionRef.current, 300)
+    } catch (e) {
+      console.warn('[env-cam] ObjectDetector failed to load:', e)
+    }
+  }, [])
+
+  // ── Run one detection frame ───────────────────────────────────────────────
+  const runDetection = useCallback(() => {
+    const video = videoRef.current
+    const detector = detectorRef.current
+    const canvas = canvasRef.current
+    if (!video || !detector || !canvas || video.readyState < 2) return
+    try {
+      const w = video.videoWidth || 640
+      const h = video.videoHeight || 480
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      ctx.drawImage(video, 0, 0, w, h)
+      const result = detector.detect(canvas)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const labels: string[] = result.detections.map((d: any) => (d.categories[0]?.categoryName ?? '').toLowerCase())
+      const personCount = labels.filter(l => l === 'person').length
+      const hasLaptop = labels.some(l => l === 'laptop')
+      let next: DetectionState
+      if (personCount >= 2)                        next = 'multiple'
+      else if (personCount === 1 && hasLaptop)     next = 'ok'
+      else if (personCount === 1 && !hasLaptop)    next = 'no-laptop'
+      else if (personCount === 0 && hasLaptop)     next = 'no-person'
+      else                                         next = 'neither'
+      setDetection(next)
+    } catch (e) {
+      console.warn('[env-cam] Detection error:', e)
+    }
+  }, [])
+
+  const runDetectionRef = useRef(runDetection)
+  useEffect(() => { runDetectionRef.current = runDetection }, [runDetection])
+
+  // ── Detection loop control ───────────────────────────────────────────────
+  const startDetectionLoop = useCallback(() => {
+    if (detectIntervalRef.current) return
+    detectIntervalRef.current = setInterval(() => runDetectionRef.current(), DETECT_INTERVAL_MS)
+  }, [])
+
+  const stopDetectionLoop = useCallback(() => {
+    if (detectIntervalRef.current) { clearInterval(detectIntervalRef.current); detectIntervalRef.current = null }
+  }, [])
+
+  // ── Start rear camera ─────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
     setStatus('waiting-camera')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: 'environment' }, // rear camera
+          facingMode: { ideal: 'environment' },
           width: { ideal: 640 },
           height: { ideal: 480 },
         },
-        audio: false, // env cam is video-only; primary handles audio
+        audio: false,
       })
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        // play() may throw on strict autoplay policy — onCanPlay will retry
         videoRef.current.play().catch(() => {})
       }
-      setStatus('camera-ready')
-
-      // Broadcast to primary that this device is ready
+      // Load detector in background (non-blocking)
+      loadDetector()
       channelRef.current?.send({
         type: 'broadcast',
         event: 'env-cam-ready',
@@ -86,7 +189,7 @@ function EnvCamContent() {
       setError('Camera access denied. Allow camera permission and reload.')
       setStatus('error')
     }
-  }, [session])
+  }, [session, loadDetector])
 
   // ── Detect best supported MIME type ─────────────────────────────────────
   const getBestMimeType = () => {
@@ -131,8 +234,6 @@ function EnvCamContent() {
         })
         const data = await res.json()
         if (res.ok && data.url) {
-          setEnvVideoUrl(data.url)
-          // Broadcast video URL to primary device
           channelRef.current?.send({
             type: 'broadcast',
             event: 'env-video-uploaded',
@@ -168,7 +269,16 @@ function EnvCamContent() {
       })
     }, 1000)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, workerId, skill])
+  }, [session, workerId, skill, startDetectionLoop, stopDetectionLoop])
+
+  // ── Start detection loop when camera is live (waiting or recording) ──────
+  useEffect(() => {
+    if (status === 'waiting-start') {
+      const t = setTimeout(() => startDetectionLoop(), 1500)
+      return () => clearTimeout(t)
+    }
+    if (status !== 'recording') stopDetectionLoop()
+  }, [status, startDetectionLoop, stopDetectionLoop])
 
   // ── Supabase Realtime: subscribe to primary device signals ────────────────
   useEffect(() => {
@@ -189,12 +299,11 @@ function EnvCamContent() {
       })
       .on('broadcast', { event: 'stop-recording' }, () => {
         console.log('[env-cam] Received stop-recording signal')
+        stopDetectionLoop()
         if (mediaRecorderRef.current?.state === 'recording') {
-          // Gracefully stop — onstop handler uploads the recorded video
           mediaRecorderRef.current.stop()
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
         } else {
-          // Assessment ended before recording started (cancelled / tab-switch rejected)
           streamRef.current?.getTracks().forEach(t => t.stop())
           streamRef.current = null
           setStatus('assessment-ended')
@@ -213,6 +322,8 @@ function EnvCamContent() {
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
+      stopDetectionLoop()
+      detectorRef.current?.close?.()
       mediaRecorderRef.current?.stop()
       streamRef.current?.getTracks().forEach(t => t.stop())
       supabase.removeChannel(channel)
@@ -236,14 +347,19 @@ function EnvCamContent() {
     }
   }, [status])
 
+  // ── Derived UI helpers ────────────────────────────────────────────────────
+  const showCamera = ['waiting-camera', 'camera-ready', 'waiting-start', 'recording'].includes(status)
+  const showDetection = ['waiting-start', 'recording'].includes(status)
+  const detUI = DETECTION_UI[detection]
+  const isWarning = detection !== 'loading' && detection !== 'ok'
+  const bracketColor = detection === 'ok' ? 'border-emerald-400' : 'border-amber-400'
+
   // ── UI ────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 gap-4">
       {/* Header */}
       <div className="flex items-center gap-2 text-white">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-blue-500 text-xl font-bold text-white">
-          H
-        </div>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-blue-500 text-xl font-bold text-white">H</div>
         <span className="font-bold text-lg">HyperLocal</span>
         <Badge variant="outline" className="border-blue-400 text-blue-300 ml-2">Environment Camera</Badge>
       </div>
@@ -258,6 +374,16 @@ function EnvCamContent() {
           <span className="text-sm text-slate-400">Status</span>
           <StatusBadge status={status} />
         </div>
+
+        {/* Live frame-check badge */}
+        {showDetection && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-400">Frame Check</span>
+            {detection === 'loading' && <span className="flex items-center gap-1 text-xs text-slate-400"><Loader2 className="w-3 h-3 animate-spin" /> Loading AI...</span>}
+            {detection === 'ok'      && <span className="flex items-center gap-1 text-xs text-emerald-400 font-semibold"><ShieldCheck className="w-3 h-3" /> Frame OK</span>}
+            {isWarning               && <span className="flex items-center gap-1 text-xs text-red-400 font-semibold animate-pulse"><AlertTriangle className="w-3 h-3" /> Fix frame!</span>}
+          </div>
+        )}
         {status === 'recording' && (
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-slate-400">
@@ -296,11 +422,9 @@ function EnvCamContent() {
         )}
       </Card>
 
-      {/* Camera preview — show from waiting-camera onwards so the element
-           exists in the DOM when startCamera() sets srcObject */}
-      {(status === 'waiting-camera' || status === 'camera-ready' || status === 'waiting-start' || status === 'recording') && (
-        <div className="w-full max-w-sm relative rounded-xl overflow-hidden bg-black aspect-video border border-slate-700">
-          {/* video must be absolute so aspect-ratio drives height on all mobile browsers */}
+      {/* Camera preview */}
+      {showCamera && (
+        <div className="w-full max-w-sm relative rounded-xl overflow-hidden bg-black aspect-video border-2 border-slate-700">
           <video
             ref={videoRef}
             muted
@@ -309,45 +433,47 @@ function EnvCamContent() {
             onCanPlay={() => { videoRef.current?.play().catch(() => {}) }}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* Framing guide — always visible during waiting + recording */}
-          {(status === 'waiting-start' || status === 'recording') && (
-            <div className="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none">
-              {/* Corner bracket guides */}
+          {/* Hidden canvas for frame capture */}
+          <canvas ref={canvasRef} className="hidden" />
+
+          {showDetection && (
+            <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-2">
+              {/* Top row */}
               <div className="flex justify-between items-start">
-                <div className="w-7 h-7 border-t-2 border-l-2 border-emerald-400 rounded-tl" />
-                {status === 'recording' && (
-                  <div className="flex items-center gap-1 bg-red-600/80 rounded-full px-2 py-0.5">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    <span className="text-white text-[10px] font-bold">REC</span>
-                  </div>
-                )}
-                {status === 'waiting-start' && (
-                  <div className="flex items-center gap-1 bg-black/60 rounded-full px-2 py-0.5">
-                    <Loader2 className="w-3 h-3 text-emerald-400 animate-spin" />
-                    <span className="text-emerald-300 text-[10px]">Waiting...</span>
-                  </div>
-                )}
-                <div className="w-7 h-7 border-t-2 border-r-2 border-emerald-400 rounded-tr" />
+                <div className={`w-7 h-7 border-t-2 border-l-2 rounded-tl transition-colors ${bracketColor}`} />
+                {status === 'recording'
+                  ? <span className="flex items-center gap-1 bg-red-600/80 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"><span className="w-2 h-2 bg-white rounded-full animate-pulse" /> REC</span>
+                  : <span className="flex items-center gap-1 bg-black/60 rounded-full px-2 py-0.5 text-[10px] text-emerald-300"><Loader2 className="w-3 h-3 animate-spin" /> Waiting...</span>
+                }
+                <div className={`w-7 h-7 border-t-2 border-r-2 rounded-tr transition-colors ${bracketColor}`} />
               </div>
 
-              {/* Centre framing hint */}
-              <div className="flex justify-center">
-                <p className="text-[11px] font-semibold text-white bg-black/65 px-3 py-1 rounded-full text-center">
-                  💻 Laptop + 🧑 Person (only 1) must be visible
-                </p>
-              </div>
-
-              {/* Bottom corners + warning strip */}
+              {/* Bottom row: banner + corners */}
               <div className="flex flex-col gap-1">
-                {status === 'recording' && (
-                  <div className="mx-1 bg-amber-500/80 rounded-lg px-3 py-1.5 text-center">
-                    <p className="text-[11px] font-bold text-white">⚠️ Keep BOTH the laptop screen and your upper body in frame</p>
-                    <p className="text-[10px] text-amber-100 mt-0.5">Only ONE person should be visible — AI is monitoring</p>
+                {isWarning && detUI && (
+                  <div className={`${detUI.color} rounded-lg px-3 py-2 flex items-start gap-2`}>
+                    {detUI.icon}
+                    <div>
+                      <p className="text-white text-[12px] font-bold leading-tight">{detUI.text}</p>
+                      <p className="text-white/80 text-[10px] leading-tight mt-0.5">{detUI.sub}</p>
+                    </div>
+                  </div>
+                )}
+                {detection === 'ok' && (
+                  <div className="bg-emerald-600/80 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-white flex-shrink-0" />
+                    <p className="text-white text-[11px] font-semibold">✓ Laptop + 1 person visible — frame looks good</p>
+                  </div>
+                )}
+                {detection === 'loading' && (
+                  <div className="bg-black/60 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <Loader2 className="w-3 h-3 text-slate-300 animate-spin flex-shrink-0" />
+                    <p className="text-slate-300 text-[11px]">AI loading — will check frame shortly...</p>
                   </div>
                 )}
                 <div className="flex justify-between items-end">
-                  <div className="w-7 h-7 border-b-2 border-l-2 border-emerald-400 rounded-bl" />
-                  <div className="w-7 h-7 border-b-2 border-r-2 border-emerald-400 rounded-br" />
+                  <div className={`w-7 h-7 border-b-2 border-l-2 rounded-bl transition-colors ${bracketColor}`} />
+                  <div className={`w-7 h-7 border-b-2 border-r-2 rounded-br transition-colors ${bracketColor}`} />
                 </div>
               </div>
             </div>
@@ -355,7 +481,7 @@ function EnvCamContent() {
         </div>
       )}
 
-      {/* Instructions */}
+      {/* Setup instructions */}
       {status === 'waiting-start' && (
         <Card className="w-full max-w-sm p-4 bg-slate-900 border-slate-700">
           <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
@@ -363,10 +489,10 @@ function EnvCamContent() {
           </h3>
           <ol className="text-xs text-slate-400 space-y-1.5 list-decimal list-inside">
             <li>Place this phone at a <strong className="text-white">45° angle to the side</strong> of the worker</li>
-            <li>Frame the shot so the <strong className="text-white">laptop screen AND the person&apos;s upper body</strong> are fully visible</li>
-            <li>Verify <strong className="text-white">only one person</strong> appears in the preview above</li>
-            <li>Recording starts <strong className="text-white">automatically</strong> when the test begins on the primary device</li>
-            <li>This screen will update automatically when the assessment <strong className="text-white">ends or is stopped</strong></li>
+            <li>Frame so <strong className="text-white">laptop screen AND person&apos;s upper body</strong> are visible</li>
+            <li>Wait for the <strong className="text-emerald-400">green “Frame OK”</strong> banner — AI is checking live</li>
+            <li>Recording starts <strong className="text-white">automatically</strong> when the test begins</li>
+            <li>This screen updates automatically when the assessment <strong className="text-white">ends or is stopped</strong></li>
           </ol>
         </Card>
       )}
