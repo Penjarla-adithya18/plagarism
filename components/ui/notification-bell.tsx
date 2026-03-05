@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -21,6 +22,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export function NotificationBell() {
   const { user } = useAuth()
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -110,8 +112,21 @@ export function NotificationBell() {
           <div className="max-h-80 overflow-y-auto divide-y">
             {notifications.map((n) => {
               const Icon = ICON_MAP[n.type] ?? Info
+              const handleClick = () => {
+                if (n.link) {
+                  // Mark as read immediately
+                  setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: true } : item))
+                  notificationOps.markAllRead().catch(() => {})
+                  setOpen(false)
+                  router.push(n.link)
+                }
+              }
               return (
-                <div key={n.id} className={`flex gap-3 px-4 py-3 hover:bg-muted/50 transition-colors ${!n.isRead ? 'bg-primary/5' : ''}`}>
+                <div
+                  key={n.id}
+                  onClick={handleClick}
+                  className={`flex gap-3 px-4 py-3 transition-colors ${!n.isRead ? 'bg-primary/5' : ''} ${n.link ? 'cursor-pointer hover:bg-muted/70' : 'hover:bg-muted/50'}`}
+                >
                   <div className={`mt-0.5 w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${!n.isRead ? 'bg-primary/10' : 'bg-muted'}`}>
                     <Icon className="w-4 h-4 text-primary" />
                   </div>
@@ -120,7 +135,10 @@ export function NotificationBell() {
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
                     <p className="text-xs text-muted-foreground mt-1">{relativeTime(n.createdAt)}</p>
                   </div>
-                  {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary mt-2" />}
+                    {n.link && <span className="text-[10px] text-muted-foreground/60 mt-auto">→</span>}
+                  </div>
                 </div>
               )
             })}
