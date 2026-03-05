@@ -33,8 +33,7 @@ export default function WorkerDashboardPage() {
   const [workerProfile, setWorkerProfile] = useState<WorkerProfile | null>(null);
   const [trustScore, setTrustScore] = useState<TrustScore | null>(null);
   const [recommendedJobs, setRecommendedJobs] = useState<Array<{ job: Job; matchScore: number }>>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [applications, setApplications] = useState<Application[]>([]);  const [jobsMap, setJobsMap] = useState<Record<string, Job>>({});  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
@@ -70,6 +69,11 @@ export default function WorkerDashboardPage() {
       setWorkerProfile(profileVal);
       setTrustScore(trustVal);
       setApplications(appsVal || []);
+
+      // Build a quick-lookup map of jobId → Job for the recent applications display
+      const map: Record<string, Job> = {}
+      allJobsVal.forEach((j: Job) => { map[j.id] = j })
+      setJobsMap(map)
 
       // Get job recommendations
       if (profileVal && profileVal.profileCompleted) {
@@ -324,7 +328,9 @@ export default function WorkerDashboardPage() {
                 <Card key={app.id} className="card-modern p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold mb-1">Application #{app.id.slice(-8)}</h3>
+                      <h3 className="font-semibold mb-1">
+                        {jobsMap[app.jobId]?.title ?? `Application #${app.id.slice(-6)}`}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
                         Applied {new Date(app.createdAt).toLocaleDateString()}
                       </p>
