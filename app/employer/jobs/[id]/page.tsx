@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { db, escrowOps, applicationOps, ratingOps, userOps, workerProfileOps, notificationOps, sendWATIAlert } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import { Job, Application, EscrowTransaction, WorkerProfile } from '@/lib/types'
 import {
   ArrowLeft, Lock, Unlock, RefreshCcw, MapPin, Clock, IndianRupee, Users,
@@ -39,6 +40,7 @@ export default function EmployerJobDetailPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
+  const { t } = useI18n()
   const jobId = params.id as string
 
   const [job, setJob] = useState<Job | null>(null)
@@ -113,16 +115,16 @@ export default function EmployerJobDetailPage() {
     // Find the accepted application to get workerId
     const acceptedApp = applications.find(a => a.status === 'accepted' || a.status === 'completed')
     if (!acceptedApp) {
-      toast({ title: 'No worker found', description: 'No accepted application to rate', variant: 'destructive' })
+      toast({ title: t('employer.jobDetail.noWorkerFound'), description: t('employer.jobDetail.noAcceptedToRate'), variant: 'destructive' })
       return
     }
     setActionLoading(true)
     try {
       await ratingOps.create({ jobId, toUserId: acceptedApp.workerId, rating: ratingValue, feedback: ratingFeedback })
-      toast({ title: 'Rating Submitted!', description: `You rated this worker ${ratingValue}/5 ⭐` })
+      toast({ title: t('employer.jobDetail.ratingSubmitted'), description: t('employer.jobDetail.ratingSubmittedDesc', { rating: ratingValue }) })
       setRatingDone(true)
       setRatingOpen(false)
-    } catch { toast({ title: 'Error', description: 'Failed to submit rating', variant: 'destructive' }) }
+    } catch { toast({ title: t('common.error'), description: t('employer.jobDetail.ratingSubmitFailed'), variant: 'destructive' }) }
     finally { setActionLoading(false) }
   }
 
@@ -137,7 +139,7 @@ export default function EmployerJobDetailPage() {
         // Mark application as completed
         ...(acceptedApp ? [applicationOps.update(acceptedApp.id, { status: 'completed' })] : []),
       ])
-      toast({ title: 'Payment Released', description: 'Net payout sent to worker.' })
+      toast({ title: t('employer.jobDetail.paymentReleased'), description: t('employer.jobDetail.netPayoutSent') })
       // Send notifications + WhatsApp
       if (acceptedApp) {
         const worker = await userOps.findById(acceptedApp.workerId).catch(() => null)
@@ -159,7 +161,7 @@ export default function EmployerJobDetailPage() {
       }
       setReleaseDialogOpen(false)
       loadData()
-    } catch { toast({ title: 'Error', description: 'Failed to release payment', variant: 'destructive' }) }
+    } catch { toast({ title: t('common.error'), description: t('employer.jobDetail.releasePaymentFailed'), variant: 'destructive' }) }
     finally { setActionLoading(false) }
   }
 
@@ -171,10 +173,10 @@ export default function EmployerJobDetailPage() {
         escrowOps.update(escrow.id, { status: 'refunded' }),
         db.updateJob(jobId, { status: 'cancelled', paymentStatus: 'refunded' }),
       ])
-      toast({ title: 'Dispute Filed', description: 'Refund will be processed in 3–5 business days.' })
+      toast({ title: t('employer.jobDetail.disputeFiled'), description: t('employer.jobDetail.refundInDays') })
       setDisputeOpen(false)
       loadData()
-    } catch { toast({ title: 'Error', description: 'Failed to file dispute', variant: 'destructive' }) }
+    } catch { toast({ title: t('common.error'), description: t('employer.jobDetail.disputeFailed'), variant: 'destructive' }) }
     finally { setActionLoading(false) }
   }
 
@@ -218,9 +220,9 @@ export default function EmployerJobDetailPage() {
         }
       }
 
-      toast({ title: 'Application Accepted!', description: 'The worker has been notified.' })
+      toast({ title: t('employer.jobDetail.applicationAccepted'), description: t('employer.jobDetail.workerNotified') })
       loadData()
-    } catch { toast({ title: 'Error', description: 'Failed to update application', variant: 'destructive' }) }
+    } catch { toast({ title: t('common.error'), description: t('employer.jobDetail.updateApplicationFailed'), variant: 'destructive' }) }
     finally { setActionLoading(false) }
   }
 
@@ -250,9 +252,9 @@ export default function EmployerJobDetailPage() {
         }
       }
 
-      toast({ title: 'Application Rejected', description: 'The worker has been notified.' })
+      toast({ title: t('employer.jobDetail.applicationRejected'), description: t('employer.jobDetail.workerNotified') })
       loadData()
-    } catch { toast({ title: 'Error', description: 'Failed to update application', variant: 'destructive' }) }
+    } catch { toast({ title: t('common.error'), description: t('employer.jobDetail.updateApplicationFailed'), variant: 'destructive' }) }
     finally { setActionLoading(false) }
   }
 
@@ -361,7 +363,7 @@ export default function EmployerJobDetailPage() {
     <div className="app-surface">
       <EmployerNav />
       <main className="container mx-auto px-4 py-8 pb-28 md:pb-8">
-        <Card><CardContent className="py-10 text-center text-muted-foreground">Job not found</CardContent></Card>
+        <Card><CardContent className="py-10 text-center text-muted-foreground">{t('employer.jobDetail.jobNotFound')}</CardContent></Card>
       </main>
     </div>
   )
@@ -379,26 +381,26 @@ export default function EmployerJobDetailPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <button onClick={() => router.push('/employer/jobs')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2">
-              <ArrowLeft className="w-4 h-4" /> Back to Jobs
+              <ArrowLeft className="w-4 h-4" /> {t('employer.jobDetail.backToJobs')}
             </button>
             <h1 className="text-3xl font-bold">{job.title}</h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              {job.status === 'draft' && <Badge className="bg-amber-100 text-amber-800 border-amber-200">⏳ Pending Payment</Badge>}
-              {job.status === 'active' && <Badge className="bg-green-600">✓ Live</Badge>}
-              {job.status === 'completed' && <Badge variant="outline" className="border-green-500 text-green-700">Completed</Badge>}
-              {job.status === 'cancelled' && <Badge variant="destructive">Cancelled</Badge>}
+              {job.status === 'draft' && <Badge className="bg-amber-100 text-amber-800 border-amber-200">⏳ {t('employer.jobDetail.pendingPayment')}</Badge>}
+              {job.status === 'active' && <Badge className="bg-green-600">✓ {t('employer.jobDetail.live')}</Badge>}
+              {job.status === 'completed' && <Badge variant="outline" className="border-green-500 text-green-700">{t('status.completed')}</Badge>}
+              {job.status === 'cancelled' && <Badge variant="destructive">{t('status.cancelled')}</Badge>}
               <span className="text-sm text-muted-foreground">{job.category}</span>
             </div>
           </div>
           <div className="flex gap-2">
             {job.status === 'draft' && (
               <Button className="bg-amber-500 hover:bg-amber-600 text-white gap-2" onClick={() => router.push(`/employer/payment/${job.id}`)}>
-                <Lock className="w-4 h-4" /> Complete Payment
+                <Lock className="w-4 h-4" /> {t('employer.jobs.completePayment')}
               </Button>
             )}
             {job.status === 'active' && (
               <Button variant="outline" onClick={() => router.push(`/employer/jobs/${job.id}/edit`)}>
-                <Edit className="w-4 h-4 mr-1" /> Edit Job
+                <Edit className="w-4 h-4 mr-1" /> {t('common.edit')}
               </Button>
             )}
           </div>
@@ -408,26 +410,26 @@ export default function EmployerJobDetailPage() {
           {/* Left */}
           <div className="lg:col-span-2 space-y-4">
             <Card>
-              <CardHeader><CardTitle>Job Details</CardTitle></CardHeader>
+              <CardHeader><CardTitle>{t('employer.jobDetail.jobDetails')}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="w-4 h-4" /> {job.location || 'Not specified'}</div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="w-4 h-4" /> {job.location || t('employer.jobDetail.notSpecified')}</div>
                   <div className="flex items-center gap-2 text-muted-foreground"><Clock className="w-4 h-4" /> {job.duration ?? job.timing}</div>
-                  <div className="flex items-center gap-2 text-muted-foreground"><IndianRupee className="w-4 h-4" /> ₹{amount.toLocaleString()} / {job.payType === 'fixed' ? 'fixed' : 'hr'}</div>
-                  <div className="flex items-center gap-2 text-muted-foreground"><Users className="w-4 h-4" /> {applications.length} applicants</div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><IndianRupee className="w-4 h-4" /> ₹{amount.toLocaleString()} / {job.payType === 'fixed' ? t('common.fixed') : t('common.hourShort')}</div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><Users className="w-4 h-4" /> {t('employer.jobDetail.applicantsCount', { count: applications.length })}</div>
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm font-medium mb-1">Description</p>
+                  <p className="text-sm font-medium mb-1">{t('job.description')}</p>
                   <p className="text-sm text-muted-foreground whitespace-pre-line">{job.description}</p>
                 </div>
                 {job.requiredSkills?.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium mb-2">Required Skills</p>
+                    <p className="text-sm font-medium mb-2">{t('job.requiredSkills')}</p>
                     <div className="flex flex-wrap gap-2">{job.requiredSkills.map((s) => <Badge key={s} variant="secondary">{s}</Badge>)}</div>
                   </div>
                 )}
-                {job.requirements && <div><p className="text-sm font-medium mb-1">Requirements</p><p className="text-sm text-muted-foreground">{job.requirements}</p></div>}
+                {job.requirements && <div><p className="text-sm font-medium mb-1">{t('employer.jobDetail.requirements')}</p><p className="text-sm text-muted-foreground">{job.requirements}</p></div>}
               </CardContent>
             </Card>
 
@@ -435,11 +437,11 @@ export default function EmployerJobDetailPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Applications ({applications.length})</CardTitle>
-                    <CardDescription>Workers who applied</CardDescription>
+                    <CardTitle>{t('employer.jobDetail.applicationsTitle', { count: applications.length })}</CardTitle>
+                    <CardDescription>{t('employer.jobDetail.workersApplied')}</CardDescription>
                   </div>
                   <Button size="sm" variant="outline" onClick={loadData} disabled={actionLoading}>
-                    <RefreshCcw className="w-4 h-4 mr-1" /> Refresh
+                    <RefreshCcw className="w-4 h-4 mr-1" /> {t('common.refresh')}
                   </Button>
                 </div>
               </CardHeader>
@@ -447,7 +449,7 @@ export default function EmployerJobDetailPage() {
                 {applications.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <Users className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">{job.status === 'draft' ? 'Complete payment to make job visible to workers.' : 'No applications yet.'}</p>
+                    <p className="text-sm">{job.status === 'draft' ? t('employer.jobDetail.completePaymentVisible') : t('employer.jobDetail.noApplicationsYet')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -455,7 +457,7 @@ export default function EmployerJobDetailPage() {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search applicants by name, skill…"
+                        placeholder={t('employer.jobDetail.searchApplicantsPlaceholder')}
                         value={appSearch}
                         onChange={e => setAppSearch(e.target.value)}
                         className="pl-9 pr-9 h-9 text-sm"
@@ -485,7 +487,7 @@ export default function EmployerJobDetailPage() {
                       // Resume available from worker profile or the application itself
                       const resumeUrl = workerProfile?.resumeUrl || app.resumeUrl || null
                       const trustColor = worker?.trustLevel === 'trusted' ? 'text-green-600' : worker?.trustLevel === 'active' ? 'text-blue-600' : 'text-amber-600'
-                      const trustLabel = worker?.trustLevel === 'trusted' ? '✅ Trusted' : worker?.trustLevel === 'active' ? '👍 Active' : '🌱 New'
+                      const trustLabel = worker?.trustLevel === 'trusted' ? t('employer.jobDetail.trustTrusted') : worker?.trustLevel === 'active' ? t('employer.jobDetail.trustActive') : t('employer.jobDetail.trustNew')
 
                       // Compute skill-overlap match score — prefer DB value, then worker profile skills, then user skills
                       let displayMatch = app.matchScore
@@ -508,34 +510,34 @@ export default function EmployerJobDetailPage() {
                                 {worker?.fullName?.charAt(0) || 'W'}
                               </div>
                               <div>
-                                <p className="text-sm font-medium">{worker?.fullName || 'Worker'}</p>
+                                <p className="text-sm font-medium">{worker?.fullName || t('employer.jobDetail.worker')}</p>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-xs text-muted-foreground">Match: <span className="text-primary font-semibold">{displayMatch > 0 ? `${displayMatch}%` : 'N/A'}</span></p>
-                                  <Badge variant="outline" className="text-xs">{app.status}</Badge>
+                                  <p className="text-xs text-muted-foreground">{t('employer.jobDetail.match')}: <span className="text-primary font-semibold">{displayMatch > 0 ? `${displayMatch}%` : t('employer.jobDetail.na')}</span></p>
+                                  <Badge variant="outline" className="text-xs">{t(`status.${app.status}`) || app.status}</Badge>
                                   {worker && <span className={`text-xs font-medium ${trustColor}`}>{trustLabel} · ⭐ {worker.trustScore.toFixed(1)}</span>}
                                   {resumeUrl
-                                    ? <span className="flex items-center gap-0.5 text-xs text-emerald-600 font-medium"><FileText className="w-3 h-3" />Resume</span>
-                                    : <span className="text-xs text-muted-foreground/60">No resume</span>}
+                                    ? <span className="flex items-center gap-0.5 text-xs text-emerald-600 font-medium"><FileText className="w-3 h-3" />{t('employer.jobDetail.resume')}</span>
+                                    : <span className="text-xs text-muted-foreground/60">{t('employer.jobDetail.noResume')}</span>}
                                 </div>
                               </div>
                             </div>
                             <div className="flex gap-1.5 flex-wrap justify-end">
                               {app.status === 'pending' && (
                                 <>
-                                  <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50 border-green-300" onClick={() => handleAcceptApplication(app.id)} disabled={actionLoading}>✓ Accept</Button>
-                                  <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/30" onClick={() => handleRejectApplication(app.id)} disabled={actionLoading}>✗ Reject</Button>
+                                  <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50 border-green-300" onClick={() => handleAcceptApplication(app.id)} disabled={actionLoading}>✓ {t('status.accepted')}</Button>
+                                  <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/30" onClick={() => handleRejectApplication(app.id)} disabled={actionLoading}>✗ {t('status.rejected')}</Button>
                                 </>
                               )}
                               {resumeUrl && (
                                 <Button
                                   size="sm" variant="outline"
-                                  onClick={() => { setViewingResume({ name: worker?.fullName || 'Worker', url: resumeUrl }); setResumeDialogOpen(true) }}
+                                  onClick={() => { setViewingResume({ name: worker?.fullName || t('employer.jobDetail.worker'), url: resumeUrl }); setResumeDialogOpen(true) }}
                                 >
-                                  <FileText className="w-4 h-4 mr-1" /> Resume
+                                  <FileText className="w-4 h-4 mr-1" /> {t('employer.jobDetail.resume')}
                                 </Button>
                               )}
                               <Button size="sm" variant="outline" onClick={() => handleChatWithWorker(app)}>
-                                <MessageSquare className="w-4 h-4 mr-1" /> Chat
+                                <MessageSquare className="w-4 h-4 mr-1" /> {t('common.chat')}
                               </Button>
                             </div>
                           </div>
@@ -545,7 +547,7 @@ export default function EmployerJobDetailPage() {
                               {workerProfile.skills.slice(0, 6).map(s => (
                                 <Badge key={s} variant="secondary" className={`text-xs ${job.requiredSkills?.some(r => r.toLowerCase() === s.toLowerCase()) ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : ''}`}>{s}</Badge>
                               ))}
-                              {workerProfile.skills.length > 6 && <span className="text-xs text-muted-foreground self-center">+{workerProfile.skills.length - 6} more</span>}
+                              {workerProfile.skills.length > 6 && <span className="text-xs text-muted-foreground self-center">+{workerProfile.skills.length - 6} {t('common.more')}</span>}
                             </div>
                           )}
                         </div>
@@ -562,7 +564,7 @@ export default function EmployerJobDetailPage() {
                         profile?.experience?.toLowerCase().includes(q)
                       )
                     }).length === 0 && (
-                      <p className="py-4 text-center text-sm text-muted-foreground">No applicants match &ldquo;{appSearch}&rdquo;</p>
+                      <p className="py-4 text-center text-sm text-muted-foreground">{t('employer.jobDetail.noApplicantsMatch', { query: appSearch })}</p>
                     )}
                   </div>
                 )}
@@ -573,47 +575,47 @@ export default function EmployerJobDetailPage() {
           {/* Right: Escrow Panel */}
           <div className="space-y-4">
             <Card className={`border-2 ${(escrow?.status === 'held' || job.paymentStatus === 'locked') ? 'border-green-300 bg-green-50/50' : 'border-border'}`}>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Shield className="w-5 h-5 text-primary" /> Escrow Status</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Shield className="w-5 h-5 text-primary" /> {t('employer.jobDetail.escrowStatus')}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-md border bg-background p-3 text-sm font-medium">
-                  {(escrow?.status === 'held' || job.paymentStatus === 'locked') && <span className="flex items-center gap-2 text-green-700"><Lock className="w-4 h-4 shrink-0" /> Secured in Escrow</span>}
-                  {(escrow?.status ?? job.paymentStatus) === 'released' && <span className="flex items-center gap-2 text-blue-700"><Unlock className="w-4 h-4 shrink-0" /> Released to Worker</span>}
-                  {(escrow?.status ?? job.paymentStatus) === 'refunded' && <span className="flex items-center gap-2 text-orange-700"><RefreshCcw className="w-4 h-4 shrink-0" /> Refunded</span>}
-                  {(escrow?.status ?? job.paymentStatus) === 'pending' && <span className="flex items-center gap-2 text-amber-600"><AlertCircle className="w-4 h-4 shrink-0" /> Pending Payment</span>}
+                  {(escrow?.status === 'held' || job.paymentStatus === 'locked') && <span className="flex items-center gap-2 text-green-700"><Lock className="w-4 h-4 shrink-0" /> {t('employer.jobDetail.securedEscrow')}</span>}
+                  {(escrow?.status ?? job.paymentStatus) === 'released' && <span className="flex items-center gap-2 text-blue-700"><Unlock className="w-4 h-4 shrink-0" /> {t('employer.jobDetail.releasedWorker')}</span>}
+                  {(escrow?.status ?? job.paymentStatus) === 'refunded' && <span className="flex items-center gap-2 text-orange-700"><RefreshCcw className="w-4 h-4 shrink-0" /> {t('employer.jobDetail.refunded')}</span>}
+                  {(escrow?.status ?? job.paymentStatus) === 'pending' && <span className="flex items-center gap-2 text-amber-600"><AlertCircle className="w-4 h-4 shrink-0" /> {t('employer.jobDetail.pendingPayment')}</span>}
                 </div>
 
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between text-muted-foreground"><span>Job Amount</span><span className="font-medium text-foreground">₹{amount.toLocaleString()}</span></div>
-                  <div className="flex justify-between text-muted-foreground"><span>Platform Fee (10%)</span><span>₹{commission.toLocaleString()}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>{t('employer.jobDetail.jobAmount')}</span><span className="font-medium text-foreground">₹{amount.toLocaleString()}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>{t('employer.jobDetail.platformFee10')}</span><span>₹{commission.toLocaleString()}</span></div>
                   <Separator />
-                  <div className="flex justify-between font-semibold"><span>Worker Receives</span><span className="text-green-700">₹{netPayout.toLocaleString()}</span></div>
+                  <div className="flex justify-between font-semibold"><span>{t('employer.jobDetail.workerReceives')}</span><span className="text-green-700">₹{netPayout.toLocaleString()}</span></div>
                 </div>
 
                 {job.status === 'draft' && (
                   <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" onClick={() => router.push(`/employer/payment/${job.id}`)}>
-                    <Lock className="w-4 h-4 mr-2" /> Pay & Make Live
+                    <Lock className="w-4 h-4 mr-2" /> {t('employer.jobDetail.payMakeLive')}
                   </Button>
                 )}
 
                 {(escrow?.status === 'held' || job.paymentStatus === 'locked') && job.status === 'active' && (
                   <div className="space-y-2">
                     <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setReleaseDialogOpen(true)} disabled={actionLoading}>
-                      <CheckCircle2 className="w-4 h-4 mr-2" /> Job Done — Release Payment
+                      <CheckCircle2 className="w-4 h-4 mr-2" /> {t('employer.jobDetail.jobDoneRelease')}
                     </Button>
                     <Button variant="ghost" className="w-full text-sm text-destructive hover:bg-destructive/10" onClick={() => setDisputeOpen(true)}>
-                      <AlertCircle className="w-4 h-4 mr-1" /> Raise a Dispute
+                      <AlertCircle className="w-4 h-4 mr-1" /> {t('payment.raiseDispute')}
                     </Button>
                   </div>
                 )}
 
                 {(escrow?.status === 'released' || job.paymentStatus === 'released') && (
                   <div className="bg-green-100 border border-green-200 rounded-lg p-3 text-sm text-green-800 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" /> Payment released successfully
+                    <CheckCircle2 className="w-4 h-4 shrink-0" /> {t('employer.jobDetail.paymentReleasedSuccess')}
                   </div>
                 )}
                 {(escrow?.status === 'refunded' || job.paymentStatus === 'refunded') && (
                   <div className="bg-orange-100 border border-orange-200 rounded-lg p-3 text-sm text-orange-800 flex items-center gap-2">
-                    <RefreshCcw className="w-4 h-4 shrink-0" /> Refund in process (3–5 days)
+                    <RefreshCcw className="w-4 h-4 shrink-0" /> {t('employer.jobDetail.refundInProcess')}
                   </div>
                 )}
               </CardContent>
@@ -624,10 +626,10 @@ export default function EmployerJobDetailPage() {
                 <CardContent className="p-4 flex items-center gap-3">
                   <Star className="w-8 h-8 text-yellow-400" />
                   <div>
-                    <p className="text-sm font-semibold">Rate the Worker</p>
-                    <p className="text-xs text-muted-foreground">{ratingDone ? 'Rating submitted ✓' : 'Your review builds trust in the community'}</p>
+                    <p className="text-sm font-semibold">{t('employer.jobDetail.rateWorker')}</p>
+                    <p className="text-xs text-muted-foreground">{ratingDone ? t('employer.jobDetail.ratingSubmittedShort') : t('employer.jobDetail.reviewBuildsTrust')}</p>
                   </div>
-                  {!ratingDone && <Button size="sm" variant="outline" className="ml-auto" onClick={() => setRatingOpen(true)}>Rate Now</Button>}
+                  {!ratingDone && <Button size="sm" variant="outline" className="ml-auto" onClick={() => setRatingOpen(true)}>{t('employer.jobDetail.rateNow')}</Button>}
                   {ratingDone && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
                 </CardContent>
               </Card>
@@ -642,7 +644,7 @@ export default function EmployerJobDetailPage() {
           <DialogHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
             <DialogTitle className="flex items-center gap-2 text-base">
               <FileText className="w-4 h-4 text-primary" />
-              {viewingResume?.name}&apos;s Resume
+              {t('employer.jobDetail.resumeOf', { name: viewingResume?.name || '' })}
             </DialogTitle>
             {viewingResume?.url && (
               <a
@@ -650,7 +652,7 @@ export default function EmployerJobDetailPage() {
                 download={`Resume_${viewingResume.name?.replace(/\s+/g, '_')}.pdf`}
                 className="flex items-center gap-1.5 text-xs text-primary hover:underline mr-6"
               >
-                <Download className="w-3.5 h-3.5" /> Download
+                <Download className="w-3.5 h-3.5" /> {t('employer.jobDetail.download')}
               </a>
             )}
           </DialogHeader>
@@ -665,13 +667,13 @@ export default function EmployerJobDetailPage() {
               // Non-PDF data URL (doc/docx/txt) — offer download only
               <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
                 <FileText className="w-12 h-12 opacity-40" />
-                <p className="text-sm">Preview not available for this file type.</p>
+                <p className="text-sm">{t('employer.jobDetail.previewUnavailable')}</p>
                 <a
                   href={viewingResume.url}
                   download={`Resume_${viewingResume.name?.replace(/\s+/g, '_')}`}
                   className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
                 >
-                  <Download className="w-4 h-4" /> Download Resume
+                  <Download className="w-4 h-4" /> {t('employer.jobDetail.downloadResume')}
                 </a>
               </div>
             ) : viewingResume?.url ? (
@@ -681,7 +683,7 @@ export default function EmployerJobDetailPage() {
                 className="w-full h-full border-0"
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No resume URL available.</div>
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">{t('employer.jobDetail.noResumeUrl')}</div>
             )}
           </div>
         </DialogContent>
@@ -689,19 +691,19 @@ export default function EmployerJobDetailPage() {
 
       <Dialog open={ratingOpen} onOpenChange={setRatingOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><Star className="w-5 h-5 text-yellow-400" /> Rate the Worker</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Star className="w-5 h-5 text-yellow-400" /> {t('employer.jobDetail.rateWorker')}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="flex items-center justify-center gap-1">
               {[1,2,3,4,5].map(n => (
                 <button key={n} onClick={() => setRatingValue(n)} className={`text-3xl transition-transform hover:scale-110 ${n <= ratingValue ? 'text-yellow-400' : 'text-muted'}`}>★</button>
               ))}
             </div>
-            <p className="text-center text-sm font-medium">{['','Poor','Below Average','Average','Good','Excellent'][ratingValue]}</p>
-            <Textarea rows={3} placeholder="Optional feedback (visible to the worker)..." value={ratingFeedback} onChange={(e) => setRatingFeedback(e.target.value)} />
+            <p className="text-center text-sm font-medium">{['', t('employer.jobDetail.ratingPoor'), t('employer.jobDetail.ratingBelowAverage'), t('employer.jobDetail.ratingAverage'), t('employer.jobDetail.ratingGood'), t('employer.jobDetail.ratingExcellent')][ratingValue]}</p>
+            <Textarea rows={3} placeholder={t('employer.jobDetail.feedbackOptional')} value={ratingFeedback} onChange={(e) => setRatingFeedback(e.target.value)} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRatingOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmitRating} disabled={actionLoading}>Submit Rating</Button>
+            <Button variant="outline" onClick={() => setRatingOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleSubmitRating} disabled={actionLoading}>{t('employer.jobDetail.submitRating')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -709,15 +711,15 @@ export default function EmployerJobDetailPage() {
       <AlertDialog open={releaseDialogOpen} onOpenChange={setReleaseDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Release payment to worker?</AlertDialogTitle>
+            <AlertDialogTitle>{t('employer.jobDetail.releasePaymentQuestion')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will release escrow funds and deduct the 10% platform commission.
+              {t('employer.jobDetail.releasePaymentDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={actionLoading}>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={() => void handleReleasePayment()} disabled={actionLoading}>
-              Release Payment
+              {t('payment.releasePayment')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -725,17 +727,17 @@ export default function EmployerJobDetailPage() {
 
       <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><AlertCircle className="w-5 h-5 text-destructive" /> Raise a Dispute</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><AlertCircle className="w-5 h-5 text-destructive" /> {t('payment.raiseDispute')}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">Describe the issue. Our team will review and process your refund within 3–5 business days.</p>
+            <p className="text-sm text-muted-foreground">{t('employer.jobDetail.disputeHelp')}</p>
             <div className="space-y-2">
-              <Label>Reason for Dispute</Label>
-              <Textarea placeholder="e.g., Worker did not show up, Job quality was unsatisfactory…" rows={4} value={disputeReason} onChange={(e) => setDisputeReason(e.target.value)} />
+              <Label>{t('employer.jobDetail.reasonForDispute')}</Label>
+              <Textarea placeholder={t('employer.jobDetail.disputePlaceholder')} rows={4} value={disputeReason} onChange={(e) => setDisputeReason(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDisputeOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleRequestRefund} disabled={!disputeReason.trim() || actionLoading}>Submit & Request Refund</Button>
+            <Button variant="outline" onClick={() => setDisputeOpen(false)}>{t('common.cancel')}</Button>
+            <Button variant="destructive" onClick={handleRequestRefund} disabled={!disputeReason.trim() || actionLoading}>{t('employer.jobDetail.submitRefundRequest')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

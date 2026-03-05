@@ -32,7 +32,7 @@ export default function WorkerChatPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const [conversations, setConversations] = useState<ChatConversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -203,7 +203,7 @@ export default function WorkerChatPage() {
     const filterResult = filterChatMessage(newMessage.trim())
     if (filterResult.blocked) {
       toast({
-        title: 'Message blocked',
+        title: t('worker.chat.messageBlocked'),
         description: filterResult.reason,
         variant: 'destructive',
       })
@@ -234,8 +234,8 @@ export default function WorkerChatPage() {
     } catch (error) {
       if (tempMessage) setMessages((prev) => prev.filter(m => m.id !== tempMessage!.id))
       toast({
-        title: 'Failed to send',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: t('worker.chat.failedToSend'),
+        description: error instanceof Error ? error.message : t('worker.chat.pleaseTryAgain'),
         variant: 'destructive'
       })
     }
@@ -262,12 +262,12 @@ export default function WorkerChatPage() {
         description: reportDescription || reportReason,
         status: 'pending',
       })
-      toast({ title: 'Report submitted', description: 'Our team will review and take action.' })
+      toast({ title: t('worker.chat.reportSubmitted'), description: t('worker.chat.reportSubmittedDesc') })
       setReportDialogOpen(false)
       setReportReason('spam')
       setReportDescription('')
     } catch {
-      toast({ title: 'Failed to submit report', variant: 'destructive' })
+      toast({ title: t('worker.chat.reportFailed'), variant: 'destructive' })
     } finally {
       setSubmittingReport(false)
     }
@@ -285,7 +285,7 @@ export default function WorkerChatPage() {
     const SpeechRecognitionAPI = win.SpeechRecognition ?? win.webkitSpeechRecognition
 
     if (!SpeechRecognitionAPI) {
-      toast({ title: 'Voice input not supported in this browser', variant: 'destructive' })
+      toast({ title: t('worker.chat.voiceNotSupported'), variant: 'destructive' })
       return
     }
 
@@ -343,11 +343,11 @@ export default function WorkerChatPage() {
           {!selectedConversation ? (
             <div className="flex flex-col h-full">
               <div className="px-4 py-4 border-b">
-                <h1 className="text-2xl font-bold text-foreground mb-2">Messages</h1>
+                <h1 className="text-2xl font-bold text-foreground mb-2" suppressHydrationWarning>{t('worker.chat.title')}</h1>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search conversations..."
+                    placeholder={t('worker.chat.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -413,8 +413,8 @@ export default function WorkerChatPage() {
                                 </p>
                               )}
                               <div className="flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground truncate">
-                                  {conv.lastMessage?.message || 'Start a conversation'}
+                                <p className="text-sm text-muted-foreground truncate" suppressHydrationWarning>
+                                  {conv.lastMessage?.message || t('worker.chat.startConversation')}
                                 </p>
                                 {unreadCount > 0 && (
                                   <Badge variant="default" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
@@ -490,7 +490,7 @@ export default function WorkerChatPage() {
                   ) : messages.length === 0 ? (
                     <div className="text-center py-12">
                       <MessageCircle className="h-16 w-16 mx-auto mb-3 text-muted-foreground/40" />
-                      <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+                      <p className="text-muted-foreground" suppressHydrationWarning>{t('worker.chat.noMessages')}</p>
                     </div>
                   ) : (
                     messages.map((message, idx) => {
@@ -545,7 +545,7 @@ export default function WorkerChatPage() {
                   <div className="flex gap-2 items-end">
                     <div className="flex-1 relative">
                       <Input
-                        placeholder="Message..."
+                        placeholder={t('worker.chat.messagePlaceholder')}
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
@@ -555,7 +555,7 @@ export default function WorkerChatPage() {
                         variant="ghost"
                         size="icon"
                         onClick={toggleVoiceInput}
-                        title={voiceListening ? 'Stop recording' : 'Voice input'}
+                        title={voiceListening ? t('worker.chat.stopRecording') : t('worker.chat.voiceInput')}
                         className={`absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full ${voiceListening ? 'text-red-500 animate-pulse bg-red-50' : 'text-muted-foreground hover:text-primary'}`}
                       >
                         {voiceListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -579,8 +579,8 @@ export default function WorkerChatPage() {
         {/* Desktop: Show both panels */}
         <div className="hidden lg:block container mx-auto px-4 py-4 h-full">
           <div className="mb-4">
-            <h1 className="text-2xl font-bold text-foreground mb-1">Messages</h1>
-            <p className="text-sm text-muted-foreground">Chat with employers about job opportunities</p>
+            <h1 className="text-2xl font-bold text-foreground mb-1" suppressHydrationWarning>{t('worker.chat.title')}</h1>
+            <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.chat.subtitle')}</p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-240px)]">
@@ -589,7 +589,7 @@ export default function WorkerChatPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search conversations..."
+                    placeholder={t('worker.chat.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -714,7 +714,7 @@ export default function WorkerChatPage() {
                     ) : messages.length === 0 ? (
                       <div className="text-center py-12">
                         <MessageCircle className="h-16 w-16 mx-auto mb-3 text-muted-foreground/40" />
-                        <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+                        <p className="text-muted-foreground" suppressHydrationWarning>{t('worker.chat.noMessages')}</p>
                       </div>
                     ) : (
                       messages.map((message, idx) => {
@@ -767,7 +767,7 @@ export default function WorkerChatPage() {
                     <div className="flex gap-2 items-end">
                       <div className="flex-1 relative">
                         <Input
-                          placeholder="Message..."
+                          placeholder={t('worker.chat.messagePlaceholder')}
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
@@ -777,7 +777,7 @@ export default function WorkerChatPage() {
                           variant="ghost"
                           size="icon"
                           onClick={toggleVoiceInput}
-                          title={voiceListening ? 'Stop recording' : 'Voice input'}
+                          title={voiceListening ? t('worker.chat.stopRecording') : t('worker.chat.voiceInput')}
                           className={`absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full ${voiceListening ? 'text-red-500 animate-pulse bg-red-50' : 'text-muted-foreground hover:text-primary'}`}
                         >
                           {voiceListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -806,9 +806,9 @@ export default function WorkerChatPage() {
                 ) : (
                   <div className="text-center">
                     <MessageCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">Select a Conversation</h3>
-                    <p className="text-muted-foreground">
-                      Choose a conversation from the list to start chatting
+                    <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.chat.selectConversation')}</h3>
+                    <p className="text-muted-foreground" suppressHydrationWarning>
+                      {t('worker.chat.selectPrompt')}
                     </p>
                   </div>
                 )}
@@ -823,31 +823,31 @@ export default function WorkerChatPage() {
       <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Report Abuse</DialogTitle>
+            <DialogTitle suppressHydrationWarning>{t('worker.chat.reportAbuse')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label className="text-sm font-medium mb-3 block">Reason for report</Label>
+              <Label className="text-sm font-medium mb-3 block" suppressHydrationWarning>{t('worker.chat.reportReason')}</Label>
               <RadioGroup value={reportReason} onValueChange={setReportReason} className="space-y-2">
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="spam" id="r-spam" />
-                  <Label htmlFor="r-spam">Spam or fake job offer</Label>
+                  <Label htmlFor="r-spam" suppressHydrationWarning>{t('worker.chat.reportSpam')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="inappropriate" id="r-inappropriate" />
-                  <Label htmlFor="r-inappropriate">Inappropriate or offensive content</Label>
+                  <Label htmlFor="r-inappropriate" suppressHydrationWarning>{t('worker.chat.reportInappropriate')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="payment_outside_platform" id="r-payment" />
-                  <Label htmlFor="r-payment">Requesting payment outside platform</Label>
+                  <Label htmlFor="r-payment" suppressHydrationWarning>{t('worker.chat.reportPayment')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="harassment" id="r-harassment" />
-                  <Label htmlFor="r-harassment">Harassment or threats</Label>
+                  <Label htmlFor="r-harassment" suppressHydrationWarning>{t('worker.chat.reportHarassment')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="scam" id="r-scam" />
-                  <Label htmlFor="r-scam">Scam or fraudulent activity</Label>
+                  <Label htmlFor="r-scam" suppressHydrationWarning>{t('worker.chat.reportScam')}</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -857,7 +857,7 @@ export default function WorkerChatPage() {
               </Label>
               <Textarea
                 id="report-desc"
-                placeholder="Describe the issue..."
+                placeholder={t('worker.chat.reportDetailsPlaceholder')}
                 rows={3}
                 value={reportDescription}
                 onChange={(e) => setReportDescription(e.target.value)}
@@ -865,11 +865,11 @@ export default function WorkerChatPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReportDialogOpen(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => setReportDialogOpen(false)} suppressHydrationWarning>
+              {t('worker.chat.cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleReportAbuse} disabled={submittingReport}>
-              {submittingReport ? 'Submitting...' : 'Submit Report'}
+            <Button variant="destructive" onClick={handleReportAbuse} disabled={submittingReport} suppressHydrationWarning>
+              {submittingReport ? t('worker.chat.submitting') : t('worker.chat.submitReport')}
             </Button>
           </DialogFooter>
         </DialogContent>

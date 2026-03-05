@@ -204,13 +204,13 @@ export default function EmployerDashboardPage() {
                 <AlertCircle className="w-5 h-5 text-accent" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold mb-1">Complete Your Business Profile</h3>
+                <h3 className="font-semibold mb-1">{t('employer.dash.completeProfileTitle')}</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  A complete profile builds trust with workers and improves application quality
+                  {t('employer.dash.completeProfileDesc')}
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Profile Completeness</span>
+                    <span className="text-muted-foreground">{t('employer.dash.profileCompleteness')}</span>
                     <span className="font-semibold">{profileCompleteness}%</span>
                   </div>
                   <Progress value={profileCompleteness} className="h-2" />
@@ -290,7 +290,7 @@ export default function EmployerDashboardPage() {
                 </div>
                 <div className="text-left">
                   <div className="font-semibold">{t('nav.messages')}</div>
-                  <div className="text-xs text-muted-foreground">Chat with applicants</div>
+                  <div className="text-xs text-muted-foreground">{t('employer.dash.chatApplicants')}</div>
                 </div>
               </Button>
             </Link>
@@ -305,8 +305,8 @@ export default function EmployerDashboardPage() {
                 <TrendingUp className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Applications Received</h3>
-                <p className="text-xs text-muted-foreground">Last 7 days</p>
+                <h3 className="font-semibold">{t('employer.dash.appsReceived')}</h3>
+                <p className="text-xs text-muted-foreground">{t('employer.dash.last7Days')}</p>
               </div>
             </div>
             <SimpleLineChart data={applicationTrendData} />
@@ -318,8 +318,8 @@ export default function EmployerDashboardPage() {
                 <Briefcase className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <h3 className="font-semibold">Top Performing Jobs</h3>
-                <p className="text-xs text-muted-foreground">By applications</p>
+                <h3 className="font-semibold">{t('employer.dash.topJobs')}</h3>
+                <p className="text-xs text-muted-foreground">{t('employer.dash.byApplications')}</p>
               </div>
             </div>
             <SimpleBarChart data={jobPerformanceData} />
@@ -350,7 +350,7 @@ export default function EmployerDashboardPage() {
               <Link href="/employer/jobs/post">
                 <Button className="bg-accent hover:bg-accent/90">
                   <PlusCircle className="w-4 h-4 mr-2" />
-                  Post Your First Job
+                  {t('employer.dash.postFirstCta')}
                 </Button>
               </Link>
             </Card>
@@ -385,7 +385,7 @@ export default function EmployerDashboardPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Eye className="w-4 h-4" />
-                        {(job.views ?? 0)} views
+                        {t('employer.dash.views', { count: job.views ?? 0 })}
                       </div>
                     </div>
                   </div>

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { jobOps } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import { Job } from '@/lib/types'
 import {
   Shield,
@@ -31,6 +32,7 @@ export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useI18n()
   const jobId = params.jobId as string
 
   const [job, setJob] = useState<Job | null>(null)
@@ -81,7 +83,7 @@ export default function PaymentPage() {
   if (!job) {
     return (
       <div className="app-surface flex items-center justify-center">
-        <p className="text-muted-foreground">Job not found.</p>
+        <p className="text-muted-foreground">{t('employer.payment.jobNotFound')}</p>
       </div>
     )
   }
@@ -100,7 +102,7 @@ export default function PaymentPage() {
 
   const handlePay = async (method: string) => {
     if (method === 'upi' && !upiId.includes('@')) {
-      setUpiError('Enter a valid UPI ID (e.g. 9876543210@upi)')
+      setUpiError(t('employer.payment.upiInvalid'))
       return
     }
     setUpiError('')
@@ -127,11 +129,11 @@ export default function PaymentPage() {
           </div>
           <span className="font-semibold text-slate-800">HyperLocal Pay</span>
           <Badge variant="outline" className="text-xs text-green-700 border-green-300 bg-green-50">
-            <Shield className="w-3 h-3 mr-1" /> Secure Checkout
+            <Shield className="w-3 h-3 mr-1" /> {t('employer.payment.secureCheckout')}
           </Badge>
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-500">
-          <Lock className="w-3 h-3" /> 256-bit SSL encrypted
+          <Lock className="w-3 h-3" /> {t('employer.payment.ssl')}
         </div>
       </div>
 
@@ -140,11 +142,11 @@ export default function PaymentPage() {
           <div className="bg-white rounded-2xl p-10 flex flex-col items-center gap-5 shadow-2xl w-80">
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             <div className="text-center">
-              <p className="font-semibold text-slate-800 text-lg">Processing Payment</p>
-              <p className="text-sm text-slate-500 mt-1">Please do not close this window</p>
+              <p className="font-semibold text-slate-800 text-lg">{t('employer.payment.processing')}</p>
+              <p className="text-sm text-slate-500 mt-1">{t('employer.payment.processingDesc')}</p>
             </div>
             <div className="text-xs text-slate-400 text-center">
-              Verifying with your bank…
+              {t('employer.payment.verifyingBank')}
             </div>
           </div>
         </div>
@@ -155,7 +157,7 @@ export default function PaymentPage() {
         <div className="md:col-span-2 space-y-4">
           <Card className="border-slate-200">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base text-slate-700">Order Summary</CardTitle>
+              <CardTitle className="text-base text-slate-700">{t('employer.payment.orderSummary')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-start gap-3">
@@ -172,32 +174,32 @@ export default function PaymentPage() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-slate-600">
-                  <span>Job Amount</span>
+                  <span>{t('employer.payment.jobAmount')}</span>
                   <span className="font-medium">₹{amount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-slate-500 text-xs">
                   <span className="flex items-center gap-1">
-                    <Info className="w-3 h-3" /> Platform Fee (2%)
+                    <Info className="w-3 h-3" /> {t('employer.payment.platformFee')}
                   </span>
                   <span>₹{platformFee.toLocaleString()}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-slate-800 text-base">
-                  <span>Total</span>
+                  <span>{t('employer.payment.total')}</span>
                   <span className="text-primary">₹{total.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-                <p className="font-semibold mb-1">🔒 Escrow Protection</p>
-                <p>Your payment is held securely. Released only after the worker completes the job.</p>
+                <p className="font-semibold mb-1">🔒 {t('employer.payment.escrowProtection')}</p>
+                <p>{t('employer.payment.escrowProtectionDesc')}</p>
               </div>
             </CardContent>
           </Card>
 
           <div className="flex items-center gap-2 text-xs text-slate-500 px-1">
             <Shield className="w-4 h-4 text-green-600 shrink-0" />
-            <span>Payments protected by HyperLocal Escrow. 100% refund guarantee if job is not completed.</span>
+            <span>{t('employer.payment.footerTrust')}</span>
           </div>
         </div>
 
@@ -206,9 +208,9 @@ export default function PaymentPage() {
           <Card className="border-slate-200">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-slate-700">Choose Payment Method</CardTitle>
+                <CardTitle className="text-base text-slate-700">{t('employer.payment.chooseMethod')}</CardTitle>
                 <Link href="/employer/jobs" className="text-xs text-slate-400 flex items-center gap-1 hover:text-slate-600">
-                  <ArrowLeft className="w-3 h-3" /> Cancel
+                  <ArrowLeft className="w-3 h-3" /> {t('common.cancel')}
                 </Link>
               </div>
             </CardHeader>
@@ -216,13 +218,13 @@ export default function PaymentPage() {
               <Tabs defaultValue="upi">
                 <TabsList className="grid grid-cols-3 w-full mb-6">
                   <TabsTrigger value="upi" className="flex items-center gap-1.5 text-sm">
-                    <Smartphone className="w-4 h-4" /> UPI
+                    <Smartphone className="w-4 h-4" /> {t('employer.payment.upi')}
                   </TabsTrigger>
                   <TabsTrigger value="card" className="flex items-center gap-1.5 text-sm">
-                    <CreditCard className="w-4 h-4" /> Card
+                    <CreditCard className="w-4 h-4" /> {t('employer.payment.card')}
                   </TabsTrigger>
                   <TabsTrigger value="netbanking" className="flex items-center gap-1.5 text-sm">
-                    <Building2 className="w-4 h-4" /> Net Banking
+                    <Building2 className="w-4 h-4" /> {t('employer.payment.netBanking')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -249,16 +251,16 @@ export default function PaymentPage() {
 
                   <div className="flex items-center gap-3">
                     <Separator className="flex-1" />
-                    <span className="text-xs text-slate-400">OR ENTER UPI ID</span>
+                    <span className="text-xs text-slate-400">{t('employer.payment.orEnterUpi')}</span>
                     <Separator className="flex-1" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="upiId" className="text-sm text-slate-700">UPI ID</Label>
+                    <Label htmlFor="upiId" className="text-sm text-slate-700">{t('employer.payment.upiId')}</Label>
                     <div className="flex gap-2">
                       <Input
                         id="upiId"
-                        placeholder="yourname@upi"
+                        placeholder={t('employer.payment.upiPlaceholder')}
                         value={upiId}
                         onChange={(e) => { setUpiId(e.target.value); setUpiError('') }}
                         className={upiError ? 'border-red-400' : ''}
@@ -269,11 +271,11 @@ export default function PaymentPage() {
                         size="sm"
                         className="whitespace-nowrap"
                         onClick={() => {
-                          if (!upiId.includes('@')) setUpiError('Enter a valid UPI ID')
+                          if (!upiId.includes('@')) setUpiError(t('employer.payment.upiInvalidShort'))
                           else setUpiError('')
                         }}
                       >
-                        Verify
+                        {t('employer.payment.verify')}
                       </Button>
                     </div>
                     {upiError && <p className="text-xs text-red-500">{upiError}</p>}
@@ -285,19 +287,19 @@ export default function PaymentPage() {
                     disabled={paymentState !== 'idle'}
                   >
                     <IndianRupee className="w-5 h-5 mr-1" />
-                    Pay ₹{total.toLocaleString()}
+                    {t('employer.payment.pay')} ₹{total.toLocaleString()}
                   </Button>
                 </TabsContent>
 
                 {/* Card Tab */}
                 <TabsContent value="card" className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-sm text-slate-700">Card Number</Label>
+                    <Label className="text-sm text-slate-700">{t('employer.payment.cardNumber')}</Label>
                     <div className="relative">
                       <CreditCard className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                       <Input
                         className="pl-9"
-                        placeholder="0000 0000 0000 0000"
+                        placeholder={t('employer.payment.cardNumberPlaceholder')}
                         value={cardNumber}
                         onChange={(e) => setCardNumber(formatCard(e.target.value))}
                         maxLength={19}
@@ -305,27 +307,27 @@ export default function PaymentPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm text-slate-700">Cardholder Name</Label>
+                    <Label className="text-sm text-slate-700">{t('employer.payment.cardholder')}</Label>
                     <Input
-                      placeholder="Name as on card"
+                      placeholder={t('employer.payment.cardholderPlaceholder')}
                       value={cardName}
                       onChange={(e) => setCardName(e.target.value)}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label className="text-sm text-slate-700">Expiry</Label>
+                      <Label className="text-sm text-slate-700">{t('employer.payment.expiry')}</Label>
                       <Input
-                        placeholder="MM/YY"
+                        placeholder={t('employer.payment.expiryPlaceholder')}
                         value={cardExpiry}
                         onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
                         maxLength={5}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm text-slate-700">CVV</Label>
+                      <Label className="text-sm text-slate-700">{t('employer.payment.cvv')}</Label>
                       <Input
-                        placeholder="•••"
+                        placeholder={t('employer.payment.cvvPlaceholder')}
                         type="password"
                         value={cardCvv}
                         onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 3))}
@@ -340,7 +342,7 @@ export default function PaymentPage() {
                     disabled={paymentState !== 'idle' || !cardNumber || !cardName || !cardExpiry || !cardCvv}
                   >
                     <Lock className="w-4 h-4 mr-2" />
-                    Pay ₹{total.toLocaleString()} Securely
+                    {t('employer.payment.paySecurely')} ₹{total.toLocaleString()}
                   </Button>
                 </TabsContent>
 
@@ -360,14 +362,14 @@ export default function PaymentPage() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 text-center">You will be redirected to your bank's portal</p>
+                    <p className="text-xs text-slate-400 text-center">{t('employer.payment.bankRedirect')}</p>
                 </TabsContent>
               </Tabs>
 
               <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-center gap-4 text-xs text-slate-400">
-                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> PCI DSS Compliant</span>
-                <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-green-500" /> RBI Approved</span>
-                <span className="flex items-center gap-1"><Lock className="w-3 h-3 text-green-500" /> 256-bit SSL</span>
+                  <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> {t('employer.payment.pci')}</span>
+                  <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-green-500" /> {t('employer.payment.rbi')}</span>
+                  <span className="flex items-center gap-1"><Lock className="w-3 h-3 text-green-500" /> {t('employer.payment.sslShort')}</span>
               </div>
             </CardContent>
           </Card>

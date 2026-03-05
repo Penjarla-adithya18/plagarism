@@ -124,8 +124,8 @@ export default function WorkerProfilePage() {
   const handleExtractSkills = async () => {
     if (!formData.experience) {
       toast({
-        title: 'No Experience Provided',
-        description: 'Please enter your work experience first',
+        title: t('profile.noExperience'),
+        description: t('profile.noExperienceDesc'),
         variant: 'destructive',
       });
       return;
@@ -137,15 +137,15 @@ export default function WorkerProfilePage() {
       const newSkills = [...new Set([...formData.skills, ...extracted])];
       setFormData({ ...formData, skills: newSkills });
       toast({
-        title: 'Skills Extracted!',
-        description: `AI found ${extracted.length} skill${extracted.length !== 1 ? 's' : ''} from your experience`,
+        title: t('profile.skillsExtracted'),
+        description: `${t('profile.skillsExtractedDesc')} (${extracted.length})`,
       });
     } catch {
       // fallback
       const extracted = extractSkills(formData.experience);
       const newSkills = [...new Set([...formData.skills, ...extracted])];
       setFormData({ ...formData, skills: newSkills });
-      toast({ title: 'Skills Extracted!', description: `Found ${extracted.length} skills` });
+      toast({ title: t('profile.skillsExtracted'), description: `${t('profile.skillsExtractedDesc')} (${extracted.length})` });
     } finally {
       setExtractingSkills(false);
     }
@@ -155,7 +155,7 @@ export default function WorkerProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      toast({ title: 'Image too large', description: 'Use an image under 2MB', variant: 'destructive' });
+      toast({ title: t('profile.imageTooLarge'), description: t('profile.imageTooLargeDesc'), variant: 'destructive' });
       return;
     }
     const reader = new FileReader();
@@ -186,11 +186,11 @@ export default function WorkerProfilePage() {
     const allowedExtensions = ['.pdf', '.txt', '.doc', '.docx'];
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!allowedExtensions.includes(ext)) {
-      toast({ title: 'Invalid file type', description: 'Please upload PDF, DOC, DOCX, or TXT files only', variant: 'destructive' });
+      toast({ title: t('profile.invalidFileType'), description: t('profile.invalidFileTypeDesc'), variant: 'destructive' });
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast({ title: 'File too large', description: 'Maximum file size is 5MB', variant: 'destructive' });
+      toast({ title: t('profile.fileTooLarge'), description: t('profile.fileTooLargeDesc'), variant: 'destructive' });
       return;
     }
 
@@ -200,16 +200,16 @@ export default function WorkerProfilePage() {
       reader.onload = (ev) => {
         const dataUrl = ev.target?.result as string;
         setFormData(prev => ({ ...prev, resumeUrl: dataUrl, resumeFileName: file.name }));
-        toast({ title: 'Resume Uploaded', description: `${file.name} has been attached to your profile.` });
+        toast({ title: t('profile.resumeUploadedToast'), description: `${file.name} — ${t('profile.resumeUploadedDesc')}` });
         setResumeUploading(false);
       };
       reader.onerror = () => {
         setResumeUploading(false);
-        toast({ title: 'Upload Failed', description: 'Could not read resume file', variant: 'destructive' });
+        toast({ title: t('profile.uploadFailed'), description: t('profile.uploadFailedDesc'), variant: 'destructive' });
       };
       reader.readAsDataURL(file);
     } catch {
-      toast({ title: 'Upload Failed', description: 'Could not process resume file', variant: 'destructive' });
+      toast({ title: t('profile.uploadFailed'), description: t('profile.uploadFailedDesc2'), variant: 'destructive' });
       setResumeUploading(false);
     }
   };
@@ -259,7 +259,7 @@ export default function WorkerProfilePage() {
       logout();
       router.push('/login');
     } catch {
-      toast({ title: 'Error', description: 'Failed to delete account. Please try again.', variant: 'destructive' });
+      toast({ title: t('profile.error'), description: t('profile.deleteError'), variant: 'destructive' });
     } finally {
       setDeletingAccount(false);
     }
@@ -267,11 +267,11 @@ export default function WorkerProfilePage() {
 
   const handleChangePassword = async () => {
     if (pwForm.newPw !== pwForm.confirm) {
-      toast({ title: 'Passwords do not match', variant: 'destructive' });
+      toast({ title: t('profile.passwordMismatch'), variant: 'destructive' });
       return;
     }
     if (pwForm.newPw.length < 8) {
-      toast({ title: 'Password must be at least 8 characters', variant: 'destructive' });
+      toast({ title: t('profile.passwordTooShort'), variant: 'destructive' });
       return;
     }
     setPwLoading(true);
@@ -284,7 +284,7 @@ export default function WorkerProfilePage() {
             updateUser(loginResult.user);
           }
         } catch {}
-        toast({ title: 'Password updated successfully' });
+        toast({ title: t('profile.passwordUpdated') });
         setPwForm({ current: '', newPw: '', confirm: '' });
       } else {
         toast({ title: result.message, variant: 'destructive' });
@@ -296,7 +296,7 @@ export default function WorkerProfilePage() {
 
   const handleSendOtp = async () => {
     if (!phoneForm.phone.match(/^[6-9]\d{9}$/)) {
-      toast({ title: 'Enter a valid 10-digit Indian mobile number', variant: 'destructive' });
+      toast({ title: t('profile.invalidPhone'), variant: 'destructive' });
       return;
     }
     setPhoneLoading(true);
@@ -305,7 +305,7 @@ export default function WorkerProfilePage() {
       if (res.success) {
         setOtpSent(true);
         setDisplayOtp(res.otp ?? null);
-        toast({ title: 'OTP sent', description: 'A verification code has been sent to your phone.' });
+        toast({ title: t('profile.otpSent'), description: t('profile.otpSentPhoneDesc') });
       } else {
         toast({ title: res.message ?? 'Failed to generate OTP', variant: 'destructive' });
       }
@@ -326,7 +326,7 @@ export default function WorkerProfilePage() {
       const result = await userOps.update(user!.id, { phoneNumber: phoneForm.phone });
       if (result) {
         updateUser({ phoneNumber: phoneForm.phone });
-        toast({ title: 'Phone number updated' });
+        toast({ title: t('profile.phoneUpdated') });
         setOtpSent(false);
         setDisplayOtp(null);
         setPhoneForm((prev) => ({ ...prev, otp: '' }));
@@ -338,7 +338,7 @@ export default function WorkerProfilePage() {
 
   const handleSendEmailOtp = async () => {
     if (!emailForm.email.includes('@')) {
-      toast({ title: 'Enter a valid email address', variant: 'destructive' });
+      toast({ title: t('profile.invalidEmail'), variant: 'destructive' });
       return;
     }
     setEmailLoading(true);
@@ -346,12 +346,12 @@ export default function WorkerProfilePage() {
       const res = await sendEmailOtp(emailForm.email, 'phone-change');
       if (res.success) {
         setEmailOtpSent(true);
-        toast({ title: 'OTP sent', description: 'Check your email for the verification code.' });
+        toast({ title: t('profile.otpSent'), description: t('profile.otpSentEmailDesc') });
       } else {
-        toast({ title: res.message || 'Failed to send OTP', variant: 'destructive' });
+        toast({ title: res.message || t('profile.sendOtpFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Failed to send OTP. Try again.', variant: 'destructive' });
+      toast({ title: t('profile.sendOtpFailed'), variant: 'destructive' });
     } finally {
       setEmailLoading(false);
     }
@@ -359,7 +359,7 @@ export default function WorkerProfilePage() {
 
   const handleVerifyAndUpdateEmail = async () => {
     if (emailForm.otp.length !== 6) {
-      toast({ title: 'Enter the 6-digit OTP', variant: 'destructive' });
+      toast({ title: t('profile.enterOtp'), variant: 'destructive' });
       return;
     }
     setEmailLoading(true);
@@ -372,12 +372,12 @@ export default function WorkerProfilePage() {
       const result = await userOps.update(user!.id, { email: emailForm.email });
       if (result) {
         updateUser({ email: emailForm.email });
-        toast({ title: 'Email address updated' });
+        toast({ title: t('profile.emailUpdated') });
         setEmailOtpSent(false);
         setEmailForm((prev) => ({ ...prev, otp: '' }));
       }
     } catch {
-      toast({ title: 'Update failed. Try again.', variant: 'destructive' });
+      toast({ title: t('profile.updateFailed'), variant: 'destructive' });
     } finally {
       setEmailLoading(false);
     }
@@ -403,7 +403,7 @@ export default function WorkerProfilePage() {
       }
       toast({
         title: `${approved.length} Skill${approved.length > 1 ? 's' : ''} Verified! ✓`,
-        description: `${approved.join(', ')} — verified automatically.`,
+        description: `${approved.join(', ')} — ${t('profile.skillsVerifiedMsg')}`,
       });
     }
 
@@ -415,8 +415,8 @@ export default function WorkerProfilePage() {
         localStorage.setItem(`pendingReviewSkills_${user.id}`, JSON.stringify(newPendingReview));
       }
       toast({
-        title: 'Skills Under Review',
-        description: `${pending.join(', ')} — needs admin review (borderline score).`,
+        title: t('profile.skillsUnderReview'),
+        description: `${pending.join(', ')} — ${t('profile.skillsUnderReviewDesc')}`,
       });
     }
 
@@ -427,9 +427,9 @@ export default function WorkerProfilePage() {
         ...prev,
         skills: prev.skills.filter(s => !rejectedSkillNames.includes(s)),
       }));
-      const reasons = rejected.map(r => `${r.skill}: ${r.verdictReason || 'Not passed'}`).join('\n');
+      const reasons = rejected.map(r => `${r.skill}: ${r.verdictReason || t('profile.skillsNotPassedDefault')}`).join('\n');
       toast({
-        title: `${rejected.length} Skill${rejected.length > 1 ? 's' : ''} Not Passed`,
+        title: `${rejected.length} ${t('profile.skillsNotPassed')}`,
         description: reasons,
         variant: 'destructive',
       });
@@ -438,8 +438,8 @@ export default function WorkerProfilePage() {
     // Submission failures → keep skills as unassessed (don't remove)
     if (failed.length > 0) {
       toast({
-        title: 'Assessment incomplete',
-        description: `${failed.join(', ')} — submission failed. You can retry from your profile.`,
+        title: t('profile.assessmentIncomplete'),
+        description: `${failed.join(', ')} — ${t('profile.assessmentIncompleteDesc')}`,
         variant: 'destructive',
       });
     }
@@ -482,15 +482,15 @@ export default function WorkerProfilePage() {
       updateUser({ profileCompleted: !!isComplete });
 
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been saved successfully',
+        title: t('profile.profileUpdated'),
+        description: t('profile.profileUpdatedDesc'),
       });
 
       router.push('/worker/dashboard');
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to save profile. Please try again.',
+        title: t('profile.error'),
+        description: t('profile.saveError'),
         variant: 'destructive',
       });
     } finally {
@@ -503,8 +503,8 @@ export default function WorkerProfilePage() {
 
     if (formData.categories.length === 0) {
       toast({
-        title: 'Categories Required',
-        description: 'Please select at least one job category',
+        title: t('profile.categoriesRequired'),
+        description: t('profile.categoriesRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -585,7 +585,7 @@ export default function WorkerProfilePage() {
             <Progress value={profileCompleteness} className="h-2" />
             {profileCompleteness < 100 && (
               <p className="text-xs text-muted-foreground mt-1">
-                {profileCompleteness < 50 ? 'Add skills, categories and availability to improve your job matches.' : 'Almost there! Fill in remaining fields for the best recommendations.'}
+                {profileCompleteness < 50 ? t('profile.completenessHintLow') : t('profile.completenessHintHigh')}
               </p>
             )}
           </div>
@@ -630,7 +630,7 @@ export default function WorkerProfilePage() {
                       </span>
                     </Button>
                   </label>
-                  <p className="text-xs text-muted-foreground mt-1">JPG or PNG - max 2 MB - shown at 200×200 px</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('profile.photoHint')}</p>
                 </div>
               </div>
 
@@ -639,16 +639,16 @@ export default function WorkerProfilePage() {
                 <div className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary" />
                   <div>
-                    <h3 className="text-sm font-semibold">Resume / CV</h3>
-                    <p className="text-xs text-muted-foreground">Upload for technical job applications. AI will auto-extract your skills.</p>
+                    <h3 className="text-sm font-semibold">{t('profile.resumeSection')}</h3>
+                    <p className="text-xs text-muted-foreground">{t('profile.resumeHint')}</p>
                   </div>
                 </div>
                 {formData.resumeUrl ? (
                   <div className="flex items-center gap-3 rounded-md border bg-background px-3 py-2">
                     <FileText className="h-5 w-5 text-green-600 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{formData.resumeFileName || 'Resume uploaded'}</p>
-                      <p className="text-xs text-muted-foreground">Ready for applications</p>
+                      <p className="text-sm font-medium truncate">{formData.resumeFileName || t('profile.resumeUploadedLabel')}</p>
+                      <p className="text-xs text-muted-foreground">{t('profile.resumeReady')}</p>
                     </div>
                     <Button
                       type="button"
@@ -675,18 +675,18 @@ export default function WorkerProfilePage() {
                           {resumeUploading ? (
                             <>
                               <Loader2 className="w-4 h-4 animate-spin" />
-                              Processing…
+                              {t('profile.processing')}
                             </>
                           ) : (
                             <>
                               <Upload className="w-4 h-4" />
-                              Upload Resume
+                              {t('profile.uploadResume')}
                             </>
                           )}
                         </span>
                       </Button>
                     </label>
-                    <p className="text-xs text-muted-foreground mt-1">PDF, DOC, DOCX, or TXT — max 5 MB</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('profile.resumeFormat')}</p>
                   </div>
                 )}
               </div>
@@ -695,11 +695,11 @@ export default function WorkerProfilePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Full Name</Label>
+                  <Label>{t('profile.fullName')}</Label>
                   <Input value={user?.fullName ?? ''} disabled />
                 </div>
                 <div className="space-y-2">
-                  <Label>Phone Number</Label>
+                  <Label>{t('profile.phoneLbl')}</Label>
                   <Input value={user?.phoneNumber ?? ''} disabled />
                 </div>
               </div>
@@ -717,30 +717,30 @@ export default function WorkerProfilePage() {
                   }`} />
                   <div className="flex-1">
                     <p className="text-sm font-semibold capitalize">
-                      {user.trustLevel === 'trusted' ? 'Trusted Worker' :
-                       user.trustLevel === 'active' ? 'Active Worker' : 'New Worker'}
+                      {user.trustLevel === 'trusted' ? t('profile.trustTrusted') :
+                       user.trustLevel === 'active' ? t('profile.trustActive') : t('profile.trustNew')}
                     </p>
-                    <p className="text-xs text-muted-foreground">Trust Score: {user.trustScore.toFixed(1)} / 100</p>
+                    <p className="text-xs text-muted-foreground">{t('profile.trustScore')}: {user.trustScore.toFixed(1)} / 100</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm font-bold">{user.trustScore.toFixed(1)}</span>
                   </div>
                 </div>
-              )}                <Label htmlFor="location">Location</Label>
+              )}                <Label htmlFor="location">{t('profile.locationLbl')}</Label>
                 <LocationInput
                   id="location"
-                  placeholder="e.g., Vijayawada, Andhra Pradesh"
+                  placeholder={t('profile.locationPh')}
                   value={formData.location}
                   onChange={(val) => setFormData((prev) => ({ ...prev, location: val }))}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio (Optional)</Label>
+                <Label htmlFor="bio">{t('profile.bioLbl')}</Label>
                 <Textarea
                   id="bio"
-                  placeholder="Tell employers about yourself..."
+                  placeholder={t('profile.bioPh')}
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   rows={3}
@@ -756,8 +756,8 @@ export default function WorkerProfilePage() {
                 <Star className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">Job Categories *</h2>
-                <p className="text-sm text-muted-foreground">Select categories you're interested in</p>
+                <h2 className="text-xl font-semibold">{t('profile.categoriesRequired2')}</h2>
+                <p className="text-sm text-muted-foreground">{t('profile.categoriesDesc')}</p>
               </div>
             </div>
 
@@ -783,18 +783,18 @@ export default function WorkerProfilePage() {
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">Experience & Skills</h2>
-                <p className="text-sm text-muted-foreground">AI will extract skills from your experience</p>
+                <h2 className="text-xl font-semibold">{t('profile.experienceSection')}</h2>
+                <p className="text-sm text-muted-foreground">{t('profile.experienceSectionDesc')}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="experience">Work Experience</Label>
+                <Label htmlFor="experience">{t('profile.experienceLbl')}</Label>
                 <div className="flex gap-2 items-start">
                   <Textarea
                     id="experience"
-                    placeholder="e.g., I worked in a hotel for 5 years doing cleaning and customer service..."
+                    placeholder={t('profile.experiencePh')}
                     value={formData.experience}
                     onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                     rows={4}
@@ -814,19 +814,19 @@ export default function WorkerProfilePage() {
                   disabled={!formData.experience || extractingSkills}
                 >
                   {extractingSkills ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Extracting...</>
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('profile.extracting')}</>
                   ) : (
-                    <><Sparkles className="w-4 h-4 mr-2" />Extract Skills with AI</>
+                    <><Sparkles className="w-4 h-4 mr-2" />{t('profile.extractSkills')}</>
                   )}
                 </Button>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="skillInput">Skills</Label>
+                <Label htmlFor="skillInput">{t('profile.skillsLbl')}</Label>
                 <div className="flex gap-2">
                   <Input
                     id="skillInput"
-                    placeholder="Add a skill and press Enter"
+                    placeholder={t('profile.skillPh')}
                     value={formData.skillInput}
                     onChange={(e) => setFormData({ ...formData, skillInput: e.target.value })}
                     onKeyDown={(e) => {
@@ -842,7 +842,7 @@ export default function WorkerProfilePage() {
                 </div>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Shield className="w-3 h-3" />
-                  New skills require a video assessment — AI verifies automatically.
+                  {t('profile.skillsVerifiedHint')}
                 </p>
                 {formData.skills.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -857,10 +857,10 @@ export default function WorkerProfilePage() {
                         )}
                         {skill}
                         {verifiedSkills.includes(skill) && (
-                          <span className="text-[10px] ml-1 opacity-80">Verified</span>
+                          <span className="text-[10px] ml-1 opacity-80">{t('profile.skillVerified')}</span>
                         )}
                         {pendingReviewSkills.includes(skill) && (
-                          <span className="text-[10px] ml-1 text-blue-600 dark:text-blue-400">Pending Review</span>
+                          <span className="text-[10px] ml-1 text-blue-600 dark:text-blue-400">{t('profile.skillPending')}</span>
                         )}
                         <button
                           type="button"
@@ -881,25 +881,25 @@ export default function WorkerProfilePage() {
           {/* Availability */}
           <Card className="p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">Availability</h2>
-              <p className="text-sm text-muted-foreground">When are you available to work?</p>
+              <h2 className="text-xl font-semibold mb-2">{t('profile.availabilityTitle')}</h2>
+              <p className="text-sm text-muted-foreground">{t('profile.availabilityDesc')}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="availability">Work Preference</Label>
+              <Label htmlFor="availability">{t('profile.workPreference')}</Label>
               <select
                 id="availability"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 value={formData.availability}
                 onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
               >
-                <option value="">Select availability</option>
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Weekends">Weekends only</option>
-                <option value="Flexible">Flexible</option>
-                <option value="Evening">Evening shifts</option>
-                <option value="Morning">Morning shifts</option>
+                <option value="">{t('profile.selectAvailability')}</option>
+                <option value="Full-time">{t('profile.fullTime')}</option>
+                <option value="Part-time">{t('profile.partTime')}</option>
+                <option value="Weekends">{t('profile.weekendsOnly')}</option>
+                <option value="Flexible">{t('profile.flexible')}</option>
+                <option value="Evening">{t('profile.eveningShifts')}</option>
+                <option value="Morning">{t('profile.morningShifts')}</option>
               </select>
             </div>
           </Card>
@@ -930,7 +930,7 @@ export default function WorkerProfilePage() {
           <Card className="border-destructive/40 p-6 transition-all duration-200 hover:shadow-md mt-6">
             <div className="mb-6 space-y-8 border-b border-destructive/20 pb-6">
               <div>
-                <h2 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-3">Language & Region</h2>
+                <h2 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('profile.langRegion')}</h2>
                 <div className="grid grid-cols-3 gap-2">
                   {(locales as readonly SupportedLocale[]).map((code) => {
                     const [flag, ...rest] = localeLabels[code].split(' ');
@@ -978,13 +978,13 @@ export default function WorkerProfilePage() {
                     autoComplete="new-password"
                   />
                   <Button type="button" size="sm" onClick={handleChangePassword} disabled={pwLoading}>
-                    {pwLoading ? 'Updating...' : t('settings.updatePw')}
+                    {pwLoading ? t('profile.pwUpdating') : t('settings.updatePw')}
                   </Button>
                 </div>
               </div>
 
               <div>
-                <h2 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-3">Update Phone Number</h2>
+                <h2 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('profile.updatePhone')}</h2>
                 <div className="rounded-lg bg-muted/30 p-4 space-y-3">
                   <div className="flex gap-2">
                     <Input
@@ -992,11 +992,11 @@ export default function WorkerProfilePage() {
                       maxLength={10}
                       value={phoneForm.phone}
                       onChange={(e) => setPhoneForm((p) => ({ ...p, phone: e.target.value }))}
-                      placeholder="9876543210"
+                      placeholder={t('profile.phonePh')}
                       className="min-w-0"
                     />
                     <Button type="button" variant="outline" size="sm" onClick={handleSendOtp} disabled={phoneLoading} className="shrink-0">
-                      {otpSent ? 'Resend' : 'Send OTP'}
+                      {otpSent ? t('profile.resend') : t('profile.sendOtp')}
                     </Button>
                   </div>
                   {displayOtp && <p className="text-xs text-muted-foreground">OTP: {displayOtp}</p>}
@@ -1008,10 +1008,10 @@ export default function WorkerProfilePage() {
                         maxLength={6}
                         value={phoneForm.otp}
                         onChange={(e) => setPhoneForm((p) => ({ ...p, otp: e.target.value }))}
-                        placeholder="6-digit code"
+                        placeholder={t('profile.otpPh')}
                       />
                       <Button type="button" size="sm" onClick={handleVerifyAndUpdatePhone} disabled={phoneLoading}>
-                        {phoneLoading ? 'Verifying...' : 'Verify & Update'}
+                        {phoneLoading ? t('profile.verifying') : t('profile.verifyUpdate')}
                       </Button>
                     </>
                   )}
@@ -1019,18 +1019,18 @@ export default function WorkerProfilePage() {
               </div>
 
               <div>
-                <h2 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-3">Update Email Address</h2>
+                <h2 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('profile.updateEmail')}</h2>
                 <div className="rounded-lg bg-muted/30 p-4 space-y-3">
                   <div className="flex gap-2">
                     <Input
                       type="email"
                       value={emailForm.email}
                       onChange={(e) => setEmailForm((p) => ({ ...p, email: e.target.value.trim() }))}
-                      placeholder="your@email.com"
+                      placeholder={t('profile.emailPh')}
                       className="min-w-0"
                     />
                     <Button type="button" variant="outline" size="sm" onClick={handleSendEmailOtp} disabled={emailLoading} className="shrink-0">
-                      {emailOtpSent ? 'Resend' : 'Send Code'}
+                      {emailOtpSent ? t('profile.resend') : t('profile.sendCode')}
                     </Button>
                   </div>
                   {emailOtpSent && (
@@ -1041,10 +1041,10 @@ export default function WorkerProfilePage() {
                         maxLength={6}
                         value={emailForm.otp}
                         onChange={(e) => setEmailForm((p) => ({ ...p, otp: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-                        placeholder="6-digit code"
+                        placeholder={t('profile.otpPh')}
                       />
                       <Button type="button" size="sm" onClick={handleVerifyAndUpdateEmail} disabled={emailLoading}>
-                        {emailLoading ? 'Verifying...' : 'Verify & Update'}
+                        {emailLoading ? t('profile.verifying') : t('profile.verifyUpdate')}
                       </Button>
                     </>
                   )}
@@ -1074,20 +1074,20 @@ export default function WorkerProfilePage() {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+              <AlertDialogTitle>{t('profile.deleteConfirmTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
-                This action is permanent and cannot be undone.
+                {t('profile.deleteConfirmDesc')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={deletingAccount}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel disabled={deletingAccount}>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   void handleDeleteAccount();
                 }}
                 disabled={deletingAccount}
               >
-                {deletingAccount ? 'Deleting...' : 'Delete Account'}
+                {deletingAccount ? t('profile.deleting') : t('profile.deleteAccount')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

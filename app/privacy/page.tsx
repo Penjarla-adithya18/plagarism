@@ -2,13 +2,14 @@
 import { Briefcase, ArrowLeft } from 'lucide-react'
 
 export const metadata = {
-  title: 'Privacy Policy | HyperLocal Jobs',
-  description: 'Privacy Policy explaining how HyperLocal Jobs collects and uses your data.',
+  title: 'Terms and Conditions | HyperLocal Jobs',
+  description: 'Terms and Conditions for using the HyperLocal Jobs platform.',
 }
 
-export default function PrivacyPage() {
+export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+      {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
           <Link href="/signup" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors text-gray-600 dark:text-slate-400">
@@ -24,7 +25,7 @@ export default function PrivacyPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-10 pb-20">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Privacy Policy</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Terms and Conditions</h1>
         <p className="text-sm text-gray-500 dark:text-slate-500 mb-8">
           Last updated: 28 February 2026 &nbsp;&middot;&nbsp; Effective immediately
         </p>
@@ -32,151 +33,141 @@ export default function PrivacyPage() {
         <div className="space-y-8 text-sm leading-relaxed text-gray-700 dark:text-slate-300">
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">1. Introduction</h2>
-            <p>HyperLocal Technologies Pvt. Ltd. (&ldquo;HyperLocal Jobs&rdquo;, &ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;us&rdquo;) is committed to protecting your personal data. This Privacy Policy explains what data we collect, how we use it, who we share it with, and your rights under the Information Technology Act, 2000, the IT (Amendment) Act, 2008, and the Digital Personal Data Protection Act, 2023 (DPDPA).</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">1. Acceptance of Terms</h2>
+            <p>By creating an account on HyperLocal Jobs (&ldquo;Platform&rdquo;, &ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;us&rdquo;) operated by HyperLocal Technologies Pvt. Ltd., you (&ldquo;User&rdquo;, &ldquo;Worker&rdquo;, &ldquo;Employer&rdquo;) agree to be bound by these Terms and Conditions and all applicable laws and regulations of the Republic of India. If you do not agree with any part of these terms, you must not use the Platform.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">2. Information We Collect</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">2. Platform Description</h2>
+            <p>HyperLocal Jobs is a digital marketplace connecting blue-collar and gig workers (&ldquo;Workers&rdquo;) with local businesses and individuals (&ldquo;Employers&rdquo;) seeking short-term, part-time, full-time, or gig-based employment. The Platform facilitates job discovery, applications, communication, and secure escrow-based payments. We are an intermediary and not a party to the employment contract between Workers and Employers.</p>
+          </section>
 
-            <h3 className="font-medium text-gray-800 dark:text-slate-200 mt-3 mb-1">2.1 Information You Provide Directly</h3>
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">3. Eligibility</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Identity:</strong> Full name, date of birth, gender</li>
-              <li><strong>Contact:</strong> Mobile number, email address</li>
-              <li><strong>Worker Profile:</strong> Skills, work categories, years of experience, availability, bio/description, expected salary</li>
-              <li><strong>Employer Profile:</strong> Business name, business type, business description, GST number (optional)</li>
-              <li><strong>KYC:</strong> PAN card number for identity verification and verified badge</li>
-              <li><strong>Financial:</strong> Payment methods for escrow transactions (processed via certified third-party gateways; we do not store raw card or bank account details)</li>
-              <li><strong>Resume:</strong> Resume files and parsed text you upload for job applications</li>
+              <li>You must be at least 18 years of age to register as a Worker or Employer.</li>
+              <li>You must be legally authorised to work in India.</li>
+              <li>By registering, you confirm all information provided is accurate, truthful, and up to date.</li>
+              <li>You agree to keep your account credentials confidential and notify us immediately of any unauthorised access.</li>
             </ul>
+          </section>
 
-            <h3 className="font-medium text-gray-800 dark:text-slate-200 mt-3 mb-1">2.2 Automatically Collected</h3>
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">4. Account Registration &amp; Identity Verification</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Location:</strong> City/area-level location when you enable location features for job matching. We do not continuously track your GPS location.</li>
-              <li><strong>Device &amp; Usage:</strong> IP address, browser type, device type, pages visited, session duration, feature usage</li>
-              <li><strong>Session Data:</strong> Authentication tokens stored in your browser&apos;s localStorage for maintaining your login session</li>
+              <li>A valid Indian mobile number and/or email address is required for registration.</li>
+              <li>Identity verification via PAN card may be required for escrow payments and the verified badge.</li>
+              <li>Providing a false PAN or misrepresenting identity will result in immediate account suspension and may be reported to law enforcement.</li>
+              <li>Each person or business entity may maintain only one active account.</li>
             </ul>
+          </section>
 
-            <h3 className="font-medium text-gray-800 dark:text-slate-200 mt-3 mb-1">2.3 From Third-Party Services</h3>
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">5. Worker Responsibilities</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>PAN Verification (Sandbox.co.in):</strong> We receive only the verification status (verified/unverified) and name-match result. PAN numbers are encrypted at rest.</li>
-              <li><strong>WhatsApp (WATI):</strong> Delivery receipts for OTP and job notification messages sent via WhatsApp Business API</li>
+              <li>Workers must accurately represent their skills, experience, availability, and qualifications in their profile.</li>
+              <li>Workers are responsible for attending accepted jobs on time and fulfilling the agreed scope of work.</li>
+              <li>Workers must not share contact details with Employers before an application is accepted, to prevent off-platform hiring.</li>
+              <li>Workers are independent contractors, not employees of HyperLocal Jobs, and are responsible for their own taxes and insurance.</li>
+              <li>Workers must not engage in fraudulent, aggressive, or harassing behaviour toward Employers or other users.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">3. How We Use Your Data</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">6. Employer Responsibilities</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Account management:</strong> Registration, login, profile creation and updates</li>
-              <li><strong>Job matching:</strong> AI-powered skill matching between Workers and job postings, using your skills, location, categories, and availability</li>
-              <li><strong>Resume search:</strong> Employers who received applications from you can search candidate resumes using natural-language queries</li>
-              <li><strong>Communication:</strong> Sending OTPs, job alerts, application status updates, and in-platform chat messages</li>
-              <li><strong>Escrow payments:</strong> Processing and releasing payments between Employers and Workers</li>
-              <li><strong>Trust &amp; safety:</strong> Calculating trust scores, detecting fraudulent listings, verifying identity via PAN</li>
-              <li><strong>Platform improvement:</strong> Analysing aggregated usage patterns to improve features and fix issues</li>
-              <li><strong>Legal compliance:</strong> Responding to lawful requests from government authorities or courts</li>
+              <li>Employers must post accurate and genuine job listings. Fake, misleading, or fraudulent listings are strictly prohibited.</li>
+              <li>Employers must not request any fee, deposit, or personal financial information from Workers as a condition of employment.</li>
+              <li>Employers must comply with all applicable Indian labour laws, including the Minimum Wages Act, 1948 and the Code on Wages, 2019.</li>
+              <li>Employers must respect Workers&apos; dignity and must not engage in discrimination on the basis of caste, religion, gender, disability, or regional origin.</li>
+              <li>Employers who use escrow must fund it before the Worker begins work.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">4. AI &amp; Automated Processing</h2>
-            <p>We use artificial intelligence and machine learning to:</p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li>Match Workers&apos; skill profiles with job requirements (including synonym-aware matching: e.g. &ldquo;Chef&rdquo; = &ldquo;Cook&rdquo;, &ldquo;Watchman&rdquo; = &ldquo;Security Guard&rdquo;, &ldquo;Driver&rdquo; = &ldquo;Chauffeur&rdquo;, &ldquo;Maid&rdquo; = &ldquo;Housekeeper&rdquo;)</li>
-              <li>Generate natural-language match score explanations for each job</li>
-              <li>Enable Employers to search resumes using natural-language queries (RAG-powered semantic search)</li>
-              <li>Detect potentially fraudulent or misleading job listings</li>
-              <li>Translate platform content between English, Hindi, and Telugu</li>
-            </ul>
-            <p className="mt-2">AI outputs are advisory recommendations and do not constitute final hiring or rejection decisions. You may request a human review of any AI-generated outcome by contacting our support team.</p>
-            <p className="mt-2"><strong>AI Providers:</strong> We use Groq (primary) and Ollama (fallback) for AI inference. Your data is sent securely and is not used to train these providers&apos; models under our agreements with them.</p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">5. Sharing of Your Data</h2>
-            <p>We do <strong>not</strong> sell your personal data to third parties. We share data only as follows:</p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li><strong>Between Platform users:</strong> When a Worker applies to a job, the Employer sees the Worker&apos;s name, skills, experience, area, and AI match score. Mobile numbers and email addresses are hidden until both parties have connected through the Platform.</li>
-              <li><strong>Service Providers:</strong>
-                <ul className="list-disc pl-5 mt-1 space-y-1">
-                  <li>Supabase (PostgreSQL database and authentication) — data stored in Singapore/US data centres</li>
-                  <li>WATI (WhatsApp Business API for OTPs and notifications)</li>
-                  <li>Sandbox.co.in (PAN KYC verification)</li>
-                  <li>Groq / Ollama (AI inference for matching and resume search)</li>
-                </ul>
-              </li>
-              <li><strong>Legal requirements:</strong> To comply with court orders, government directives, or applicable Indian law (IT Act, DPDPA, PMLA, etc.).</li>
-              <li><strong>Business transfer:</strong> In the event of a merger or acquisition, with at least 30 days&apos; prior notice to users.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">6. Data Retention</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">7. Prohibited Activities</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Active account data is retained for as long as your account exists.</li>
-              <li>After account deletion, personal data is anonymised or deleted within 30 days, except where Indian law requires longer retention (financial and escrow records are retained for 7 years under the Income Tax Act).</li>
-              <li>Resume files are stored until you explicitly delete them from your profile settings.</li>
-              <li>Chat messages are retained for 12 months after the job is closed.</li>
+              <li>Posting or soliciting adult content, illegal work, or activities that violate any law.</li>
+              <li>Requesting advance payments, registration fees, or security deposits from Workers.</li>
+              <li>Sharing private contact information to bypass the Platform&apos;s communication system.</li>
+              <li>Using automated bots, scrapers, or scripts to access the Platform.</li>
+              <li>Creating multiple accounts to circumvent bans or restrictions.</li>
+              <li>Using abusive, casteist, sexist, or threatening language in any communication.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">7. Data Security</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">8. Escrow Payments</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>All data is transmitted over HTTPS (TLS 1.2 or higher).</li>
-              <li>Passwords are hashed using bcrypt — we never store plain-text passwords.</li>
-              <li>PAN numbers are encrypted at rest using AES-256.</li>
-              <li>Session authentication tokens expire and are refreshed automatically.</li>
-              <li>Our database uses Row-Level Security (RLS) policies — users can only read and modify their own data.</li>
-              <li>Access to production data is restricted to authorised engineers via role-based access controls.</li>
+              <li>Employers pre-fund the escrow before the job begins. Funds are held securely by the Platform.</li>
+              <li>Payment is released to the Worker once the Employer confirms work completion, or automatically after a 48-hour dispute window.</li>
+              <li>Disputes must be raised within 48 hours of job completion.</li>
+              <li>A platform service fee of up to 5% may be deducted from escrow transactions.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">8. Your Rights Under DPDPA 2023</h2>
-            <p>As a Data Principal under the Digital Personal Data Protection Act, 2023, you have the right to:</p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li><strong>Access:</strong> Request a summary of your personal data we hold</li>
-              <li><strong>Correction &amp; Completeness:</strong> Request correction of inaccurate or incomplete personal data</li>
-              <li><strong>Erasure:</strong> Request deletion of your personal data (subject to lawful retention requirements)</li>
-              <li><strong>Withdraw Consent:</strong> Withdraw consent at any time; this may affect your ability to use certain features</li>
-              <li><strong>Nominate:</strong> Nominate another individual to exercise your rights in the event of death or incapacity</li>
-              <li><strong>Grievance:</strong> Lodge a complaint with our Grievance Officer below; if unresolved, escalate to the Data Protection Board of India</li>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">9. AI Features &amp; Matching</h2>
+            <p>The Platform uses AI algorithms to recommend jobs to Workers and rank candidates for Employers. These recommendations are based on skill matching (including synonym-aware matching for terms like chef/cook, watchman/guard, driver/chauffeur, maid/bai, etc.), location, availability, and experience. AI scores are advisory only and are not guarantees of employment or hiring.</p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">10. Ratings &amp; Reviews</h2>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Both Workers and Employers may rate each other after job completion.</li>
+              <li>Ratings must be honest and based on genuine experience. Fabricated or retaliatory reviews are prohibited.</li>
+              <li>The Platform reserves the right to remove reviews that violate these Terms.</li>
             </ul>
-            <p className="mt-2">To exercise any right, email us at: <a href="mailto:privacy@hyperlocal.in" className="text-emerald-600 dark:text-emerald-400 hover:underline">privacy@hyperlocal.in</a> with the subject &ldquo;DPDPA Rights Request&rdquo;. We will respond within 72 hours.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">9. Cookies &amp; Local Storage</h2>
-            <p>The Platform does not serve third-party tracking or advertising cookies. We use browser <code className="bg-gray-100 dark:bg-slate-800 rounded px-1 font-mono">localStorage</code> exclusively for session management — storing your authentication token, session expiry timestamp, and user role. This data stays on your device and is never shared with advertisers or analytics providers.</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">11. Intellectual Property</h2>
+            <p>All Platform content, branding, code, and design are the intellectual property of HyperLocal Technologies Pvt. Ltd. Users retain ownership of content they upload but grant the Platform a non-exclusive licence to display and process it to provide services.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">10. Children&apos;s Privacy</h2>
-            <p>The Platform is not intended for individuals under 18 years of age. We do not knowingly collect personal data from minors. If you believe we have inadvertently collected data from a minor, please contact us immediately and we will delete it within 7 days.</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">12. Account Termination</h2>
+            <p>We reserve the right to suspend or permanently terminate any account that violates these Terms, engages in fraud, or poses a risk to other users, without prior notice. Users may delete their accounts at any time from the Profile settings page.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">11. Changes to This Policy</h2>
-            <p>We may update this Privacy Policy from time to time. We will notify registered users of material changes via their registered mobile number or email at least 7 days before the updated policy takes effect. Continued use of the Platform after the effective date constitutes your consent to the updated terms.</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">13. Platform Intermediary Disclaimer &amp; Safe-Harbour</h2>
+            <p className="mb-3">By using this Platform, you acknowledge and agree that HyperLocal Jobs acts solely as a digital intermediary that enables Workers and Managers (Employers) to connect virtually.</p>
+            <p className="mb-3">Submission of an application or profile does not guarantee employment, hiring, or job allocation by any Manager. All recruitment decisions are made exclusively by the Manager, and the Platform has no involvement in such decisions.</p>
+            <p className="mb-3">Any disputes, conflicts, payments, or employment-related issues arising between a Worker and a Manager shall be resolved directly between those parties, and the Platform shall bear no responsibility or liability for such matters. The Platform only facilitates communication and networking between users and does not act as an employer, contractor, or mediator.</p>
+            <p>This condition is protected under <strong>Section 79 of the Information Technology Act, 2000</strong>, which grants safe-harbour protection to intermediaries, stating that an intermediary is not liable for third-party information, communication, or interactions hosted on its platform when it merely provides access to a communication system without controlling the transaction.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">12. Grievance Officer</h2>
-            <address className="not-italic bg-gray-100 dark:bg-slate-800 rounded-lg p-3 text-sm">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">14. Limitation of Liability</h2>
+            <p>The Platform is provided on an &ldquo;as is&rdquo; basis. To the maximum extent permitted by Indian law, HyperLocal Technologies Pvt. Ltd. shall not be liable for any indirect, incidental, or consequential damages arising from use of the Platform, including disputes between Workers and Employers, missed work opportunities, or payment failures caused by third-party gateways.</p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">15. Grievance Redressal</h2>
+            <p>In accordance with the IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, users may raise grievances by contacting:</p>
+            <address className="not-italic mt-2 bg-gray-100 dark:bg-slate-800 rounded-lg p-3 text-sm">
               <strong>HyperLocal Technologies Pvt. Ltd.</strong><br />
-              Data Protection &amp; Grievance Officer<br />
-              Email: <a href="mailto:privacy@hyperlocal.in" className="text-emerald-600 dark:text-emerald-400 hover:underline">privacy@hyperlocal.in</a><br />
-              Address: Hyderabad, Telangana, India — 500081<br />
-              Response time: Within 72 hours of receipt of grievance
+              Email: <a href="mailto:support@hyperlocal.in" className="text-emerald-600 dark:text-emerald-400 hover:underline">support@hyperlocal.in</a><br />
+              Response time: Within 72 hours
             </address>
           </section>
 
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">16. Governing Law &amp; Jurisdiction</h2>
+            <p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts located in Hyderabad, Telangana, India.</p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">17. Amendments</h2>
+            <p>We may update these Terms from time to time. We will notify registered users of material changes via their registered mobile number or email at least 7 days before the changes take effect. Continued use after the effective date constitutes acceptance of the updated Terms.</p>
+          </section>
+
           <div className="border-t border-gray-200 dark:border-slate-700 pt-6 text-xs text-gray-500 dark:text-slate-500">
-            By creating an account, you acknowledge that you have read and understood this Privacy Policy.<br />
+            By creating an account, you acknowledge that you have read, understood, and agreed to these Terms and Conditions.<br />
             Also see:{' '}
-            <Link href="/terms" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-              Terms and Conditions
+            <Link href="/privacy" className="text-emerald-600 dark:text-emerald-400 hover:underline">
+              Privacy Policy
             </Link>
           </div>
         </div>

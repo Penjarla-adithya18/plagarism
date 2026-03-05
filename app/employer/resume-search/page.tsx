@@ -14,6 +14,7 @@ import { workerProfileOps, userOps, jobOps, applicationOps } from '@/lib/api'
 import { ragStore, ragSearch, parseRAGQuery, type RAGSearchResult } from '@/lib/ragEngine'
 import { extractTextFromDataUrl } from '@/lib/resumeParser'
 import type { Application, ResumeData, User } from '@/lib/types'
+import { useI18n } from '@/contexts/I18nContext'
 import {
   Search, Send, Bot, User as UserIcon, FileText, Briefcase,
   Star, ChevronRight, Loader2, Database, Sparkles
@@ -31,6 +32,7 @@ export default function ResumeSearchPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
+  const { t } = useI18n()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [searching, setSearching] = useState(false)
@@ -62,7 +64,7 @@ export default function ResumeSearchPage() {
         setMessages([{
           id: 'welcome',
           role: 'assistant',
-          content: 'You have no jobs posted yet. Post a job first and applicants will appear here.',
+          content: t('employer.resume.welcomeNoJobs'),
           timestamp: new Date(),
         }])
         return
@@ -79,7 +81,7 @@ export default function ResumeSearchPage() {
         setMessages([{
           id: 'welcome',
           role: 'assistant',
-          content: 'No one has applied to your jobs yet. Come back once you have applicants.',
+          content: t('employer.resume.welcomeNoApplicants'),
           timestamp: new Date(),
         }])
         return
@@ -163,17 +165,17 @@ export default function ResumeSearchPage() {
         id: 'welcome',
         role: 'assistant',
         content: count > 0
-          ? `Indexed **${count} applicant${count !== 1 ? 's' : ''}** across your ${jobs.length} job${jobs.length !== 1 ? 's' : ''}. Search by skills, experience, availability, or anything from their cover letter.\n\nTry:\n• "Show workers with React experience"\n• "Find applicants available on weekends"\n• "Who has plumbing skills?"\n• "Workers who mentioned data analytics"`
-          : 'Could not load applicant data. Please refresh and try again.',
+          ? t('employer.resume.welcomeIndexed', { count, jobs: jobs.length })
+          : t('employer.resume.couldNotLoad'),
         timestamp: new Date(),
       }])
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Could not load job applicants'
-      toast({ title: 'Error loading applicants', description: msg, variant: 'destructive' })
+      const msg = err instanceof Error ? err.message : t('employer.resume.couldNotLoadApplicants')
+      toast({ title: t('employer.resume.errorLoadingApplicants'), description: msg, variant: 'destructive' })
       setMessages([{
         id: 'error',
         role: 'assistant',
-        content: `Failed to load applicant data: ${msg}\n\nPlease check your internet connection and refresh the page.`,
+        content: t('employer.resume.failedToLoadMessage', { message: msg }),
         timestamp: new Date(),
       }])
     } finally {
@@ -208,11 +210,11 @@ export default function ResumeSearchPage() {
 
       let response = ''
       if (results.length === 0) {
-        response = `No applicants indexed yet. Please refresh the page.`
+        response = t('employer.resume.noApplicantsIndexed')
       } else if (hasMatches) {
-        response = `Found ${results.length} matching applicant${results.length > 1 ? 's' : ''} for "${query}":`
+        response = t('employer.resume.foundMatches', { count: results.length, query })
       } else {
-        response = `No exact matches for "${query}" — showing all ${results.length} applicant${results.length > 1 ? 's' : ''} (their profiles may use different terminology):`
+        response = t('employer.resume.noExactMatches', { query, count: results.length })
       }
 
       const assistantMsg: ChatMessage = {
@@ -227,7 +229,7 @@ export default function ResumeSearchPage() {
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        content: 'Sorry, something went wrong with the search. Please try again.',
+        content: t('employer.resume.searchError'),
         timestamp: new Date(),
       }
       setMessages(prev => [...prev, errorMsg])
@@ -241,7 +243,7 @@ export default function ResumeSearchPage() {
       <div className="min-h-screen bg-background">
         <EmployerNav />
         <div className="container mx-auto px-4 py-12 text-center">
-          <p className="text-muted-foreground">Access restricted to employers.</p>
+          <p className="text-muted-foreground">{t('employer.resume.accessRestricted')}</p>
         </div>
       </div>
     )
@@ -256,20 +258,20 @@ export default function ResumeSearchPage() {
         <div className="mb-4">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
-            AI Resume Search
+            {t('employer.resume.title')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Search through applicant resumes using natural language
+            {t('employer.resume.subtitle')}
           </p>
           <div className="flex items-center gap-2 mt-2">
             <Badge variant="outline" className="gap-1">
               <Database className="h-3 w-3" />
-              {indexedCount} resume{indexedCount !== 1 ? 's' : ''} indexed
+              {t('employer.resume.resumeIndexed', { count: indexedCount })}
             </Badge>
             {indexing && (
               <Badge variant="secondary" className="gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
-                Indexing...
+                {t('employer.resume.indexing')}
               </Badge>
             )}
           </div>
@@ -320,7 +322,7 @@ export default function ResumeSearchPage() {
                                 </div>
                               </div>
                               <Badge variant="outline" className="text-xs">
-                                Score: {result.score}
+                                {t('employer.resume.score', { score: result.score })}
                               </Badge>
                             </div>
 
@@ -336,7 +338,7 @@ export default function ResumeSearchPage() {
                             {/* Experience summary */}
                             {result.parsed.experience.length > 0 && (
                               <div className="text-xs text-muted-foreground">
-                                <strong>Experience:</strong>{' '}
+                                <strong>{t('employer.resume.experience')}:</strong>{' '}
                                 {result.parsed.experience.slice(0, 2).map(e =>
                                   `${e.title} at ${e.company}`
                                 ).join('; ')}
@@ -347,7 +349,7 @@ export default function ResumeSearchPage() {
                             {/* Projects */}
                             {result.parsed.projects.length > 0 && (
                               <div className="text-xs text-muted-foreground">
-                                <strong>Projects:</strong>{' '}
+                                <strong>{t('employer.resume.projects')}:</strong>{' '}
                                 {result.parsed.projects.slice(0, 2).map(p =>
                                   `${p.name} [${p.technologies.slice(0, 3).join(', ')}]`
                                 ).join('; ')}
@@ -385,7 +387,7 @@ export default function ResumeSearchPage() {
                 </Avatar>
                 <div className="bg-muted rounded-lg px-4 py-2.5 text-sm flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Searching resumes...
+                  {t('employer.resume.searching')}
                 </div>
               </div>
             )}
@@ -400,7 +402,7 @@ export default function ResumeSearchPage() {
               className="flex gap-2"
             >
               <Input
-                placeholder={indexedCount > 0 ? 'Ask anything… e.g. "electricians available weekends" or "Python ML developers"' : 'Loading worker profiles...'}
+                placeholder={indexedCount > 0 ? t('employer.resume.inputPlaceholderReady') : t('employer.resume.inputPlaceholderLoading')}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={searching || indexing}
@@ -419,14 +421,14 @@ export default function ResumeSearchPage() {
         {/* Quick Search Suggestions */}
         {messages.length <= 1 && indexedCount > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
-            <p className="text-sm text-muted-foreground w-full mb-1">Quick searches:</p>
+            <p className="text-sm text-muted-foreground w-full mb-1">{t('employer.resume.quickSearches')}</p>
             {[
-              'Find available electricians',
-              'Workers with plumbing skills',
-              'Python developers with ML experience',
-              'React and Node.js engineers',
-              'Experienced data analysts',
-              'Construction workers near me',
+              t('employer.resume.suggestion1'),
+              t('employer.resume.suggestion2'),
+              t('employer.resume.suggestion3'),
+              t('employer.resume.suggestion4'),
+              t('employer.resume.suggestion5'),
+              t('employer.resume.suggestion6'),
             ].map((suggestion) => (
               <Button
                 key={suggestion}

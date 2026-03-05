@@ -152,16 +152,16 @@ export default function JobDetailsPage() {
     } catch (error) {
       if (error instanceof Error && error.message.toLowerCase().includes('unauthorized')) {
         toast({
-          title: 'Session expired',
-          description: 'Please log in again to continue.',
+          title: t('worker.jobDetails.sessionExpired'),
+          description: t('worker.jobDetails.sessionExpiredDesc'),
           variant: 'destructive',
         })
         router.replace('/login')
         return
       }
       toast({
-        title: 'Error',
-        description: 'Failed to load job details',
+        title: t('worker.jobDetails.error'),
+        description: t('worker.jobDetails.errorDesc'),
         variant: 'destructive'
       })
     } finally {
@@ -174,7 +174,7 @@ export default function JobDetailsPage() {
 
     // Duplicate application guard (in case state is stale)
     if (application) {
-      toast({ title: 'Already Applied', description: 'You have already applied to this job.' })
+      toast({ title: t('worker.jobDetails.alreadyApplied'), description: t('worker.jobDetails.alreadyAppliedDesc') })
       return
     }
 
@@ -193,8 +193,8 @@ export default function JobDetailsPage() {
         })
       } catch {
         toast({
-          title: 'Resume note',
-          description: 'Could not attach resume, but your application will still be submitted.',
+          title: t('worker.jobDetails.resumeNote'),
+          description: t('worker.jobDetails.resumeNoteDesc'),
         })
       } finally {
         setResumeUploading(false)
@@ -236,13 +236,13 @@ export default function JobDetailsPage() {
       } catch (e) { console.error('Notification failed', e) }
 
       toast({
-        title: 'Success!',
-        description: 'Your application has been submitted successfully',
+        title: t('worker.jobDetails.success'),
+        description: t('worker.jobDetails.successDesc'),
       })
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to submit application',
+        title: t('worker.jobDetails.error'),
+        description: t('worker.jobDetails.errorDesc'),
         variant: 'destructive'
       })
     } finally {
@@ -262,7 +262,7 @@ export default function JobDetailsPage() {
         description: reportDesc || reportReason,
         status: 'pending',
       })
-      toast({ title: 'Report submitted', description: 'Our team will review this job listing.' })
+      toast({ title: t('worker.jobDetails.reportSubmitted'), description: t('worker.jobDetails.reportSubmittedDesc') })
       setReportOpen(false)
       setReportDesc('')
       setIsReported(true)
@@ -276,7 +276,7 @@ export default function JobDetailsPage() {
         }
       }
     } catch {
-      toast({ title: 'Failed to submit report', variant: 'destructive' })
+      toast({ title: t('worker.jobDetails.reportFailed'), variant: 'destructive' })
     } finally {
       setSubmittingReport(false)
     }
@@ -337,9 +337,9 @@ export default function JobDetailsPage() {
         <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="py-12 text-center">
-              <h3 className="text-lg font-semibold mb-2">Job Not Found</h3>
+              <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.jobDetails.jobNotFound')}</h3>
               <Button onClick={() => router.push('/worker/jobs')}>
-                Browse Jobs
+                {t('worker.jobDetails.browseJobs')}
               </Button>
             </CardContent>
           </Card>
@@ -359,7 +359,7 @@ export default function JobDetailsPage() {
           onClick={() => router.back()}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
-          Back to Jobs
+          {t('worker.jobDetails.backToJobs')}
         </Button>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -371,7 +371,7 @@ export default function JobDetailsPage() {
                     <CardTitle className="mb-2 text-xl sm:text-2xl">{displayTitle || job.title}</CardTitle>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Building2 className="h-4 w-4" />
-                      <span>{employer?.companyName || 'Company'}</span>
+                      <span suppressHydrationWarning>{employer?.companyName || t('worker.jobDetails.company')}</span>
                     </div>
                   </div>
                   <Badge variant={job.status === 'active' ? 'default' : 'outline'}>
@@ -383,8 +383,8 @@ export default function JobDetailsPage() {
                     <Badge key={skill} variant="secondary">{skill}</Badge>
                   ))}
                   {job.jobMode && (
-                    <Badge variant={job.jobMode === 'remote' ? 'default' : 'outline'} className={job.jobMode === 'remote' ? 'bg-blue-600' : ''}>
-                      {job.jobMode === 'remote' ? '🏠 Remote' : '📍 On-site'}
+                    <Badge variant={job.jobMode === 'remote' ? 'default' : 'outline'} className={job.jobMode === 'remote' ? 'bg-blue-600' : ''} suppressHydrationWarning>
+                      {job.jobMode === 'remote' ? `🏠 ${t('worker.jobDetails.remote')}` : `📍 ${t('worker.jobDetails.onsite')}`}
                     </Badge>
                   )}
                 </div>
@@ -396,8 +396,8 @@ export default function JobDetailsPage() {
                       <IndianRupee className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Payment</p>
-                      <p className="font-semibold">₹{job.payAmount}/{job.payType === 'hourly' ? 'hr' : 'fixed'}</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.jobDetails.payment')}</p>
+                      <p className="font-semibold" suppressHydrationWarning>₹{job.payAmount}/{job.payType === 'hourly' ? t('worker.jobDetails.hourly') : t('worker.jobDetails.fixed')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -405,7 +405,7 @@ export default function JobDetailsPage() {
                       <MapPin className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.jobDetails.location')}</p>
                       <p className="font-semibold">{job.location}</p>
                     </div>
                   </div>
@@ -414,7 +414,7 @@ export default function JobDetailsPage() {
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Duration</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.jobDetails.duration')}</p>
                       <p className="font-semibold">{job.duration}</p>
                     </div>
                   </div>
@@ -423,7 +423,7 @@ export default function JobDetailsPage() {
                       <Briefcase className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Experience</p>
+                      <p className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.jobDetails.experience')}</p>
                       <p className="font-semibold capitalize">{job.experienceRequired}</p>
                     </div>
                   </div>
@@ -432,8 +432,8 @@ export default function JobDetailsPage() {
                 {job.escrowRequired && (
                   <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg">
                     <Shield className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-green-700 dark:text-green-300">
-                      Payment secured with escrow - Funds released after completion
+                    <span className="text-sm text-green-700 dark:text-green-300" suppressHydrationWarning>
+                      {t('worker.jobDetails.escrowSecured')}
                     </span>
                   </div>
                 )}
@@ -442,7 +442,7 @@ export default function JobDetailsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Job Description</CardTitle>
+                <CardTitle suppressHydrationWarning>{t('worker.jobDetails.description')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground whitespace-pre-line">{displayDescription || job.description}</p>
@@ -452,7 +452,7 @@ export default function JobDetailsPage() {
             {job.requirements && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Requirements</CardTitle>
+                  <CardTitle suppressHydrationWarning>{t('worker.jobDetails.requirements')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground whitespace-pre-line">{job.requirements}</p>
@@ -463,7 +463,7 @@ export default function JobDetailsPage() {
             {job.benefits && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Benefits</CardTitle>
+                  <CardTitle suppressHydrationWarning>{t('worker.jobDetails.benefits')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground whitespace-pre-line">{job.benefits}</p>
@@ -476,8 +476,8 @@ export default function JobDetailsPage() {
             {matchScore !== null && (
               <Card className={`border-2 ${matchScore >= 70 ? 'border-green-300 bg-green-50/50' : matchScore >= 40 ? 'border-blue-200 bg-blue-50/50' : 'border-border'}`}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Sparkles className="w-5 h-5 text-primary" /> AI Match Analysis
+                  <CardTitle className="flex items-center gap-2 text-base" suppressHydrationWarning>
+                    <Sparkles className="w-5 h-5 text-primary" /> {t('worker.jobDetails.aiMatchAnalysis')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -492,8 +492,8 @@ export default function JobDetailsPage() {
                       {matchScore}%
                     </span>
                   </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    {matchScore >= 70 ? '🌟 Strong Match' : matchScore >= 40 ? '👍 Good Match' : '📋 Possible Match'}
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide" suppressHydrationWarning>
+                    {matchScore >= 70 ? `🌟 ${t('worker.jobDetails.strongMatch')}` : matchScore >= 40 ? `👍 ${t('worker.jobDetails.goodMatch')}` : `📋 ${t('worker.jobDetails.possibleMatch')}`}
                   </p>
                   {matchExplanation && (
                     <p className="text-sm text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3">
@@ -507,7 +507,7 @@ export default function JobDetailsPage() {
             {employer && (
               <Card>
                 <CardHeader>
-                  <CardTitle>About Employer</CardTitle>
+                  <CardTitle suppressHydrationWarning>{t('worker.jobDetails.aboutEmployer')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -520,7 +520,7 @@ export default function JobDetailsPage() {
                       <p className="font-semibold">{employer.companyName}</p>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span>{employer.trustScore.toFixed(1)} Trust Score</span>
+                        <span suppressHydrationWarning>{employer.trustScore.toFixed(1)} {t('worker.jobDetails.trustScore')}</span>
                       </div>
                     </div>
                   </div>
@@ -534,15 +534,15 @@ export default function JobDetailsPage() {
             {application ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Your Application</CardTitle>
+                  <CardTitle suppressHydrationWarning>{t('worker.jobDetails.yourApplication')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <span className="font-medium">Application Submitted</span>
+                    <span className="font-medium" suppressHydrationWarning>{t('worker.jobDetails.applicationSubmitted')}</span>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Status</p>
+                    <p className="text-sm text-muted-foreground mb-2" suppressHydrationWarning>{t('worker.jobDetails.status')}</p>
                     <Badge variant={
                       application.status === 'accepted' ? 'default' :
                       application.status === 'rejected' ? 'destructive' :
@@ -553,7 +553,7 @@ export default function JobDetailsPage() {
                   </div>
                   {application.coverLetter && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Cover Letter</p>
+                      <p className="text-sm text-muted-foreground mb-2" suppressHydrationWarning>{t('worker.jobDetails.coverLetter')}</p>
                       <div className="rounded-md border bg-muted/40 p-3">
                         <p className="text-sm leading-6 whitespace-pre-wrap break-words">{application.coverLetter}</p>
                       </div>
@@ -573,33 +573,33 @@ export default function JobDetailsPage() {
                     }}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Message Employer
+                    {t('worker.jobDetails.messageEmployer')}
                   </Button>
                 </CardContent>
               </Card>
             ) : showApplicationForm ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Apply for this Job</CardTitle>
+                  <CardTitle suppressHydrationWarning>{t('worker.jobDetails.applyForJob')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="coverLetter">Cover Letter (Optional)</Label>
+                    <Label htmlFor="coverLetter" suppressHydrationWarning>{t('worker.jobDetails.coverLetterOptional')}</Label>
                     <Textarea
                       id="coverLetter"
-                      placeholder="Introduce yourself and explain why you're a great fit..."
+                      placeholder={t('worker.jobDetails.coverLetterPlaceholder')}
                       rows={6}
                       value={coverLetter}
                       onChange={(e) => setCoverLetter(e.target.value)}
                     />
-                    <p className="text-xs leading-5 text-muted-foreground text-left">
-                      Optional: you can leave this blank, or add a short introduction to improve your chances.
+                    <p className="text-xs leading-5 text-muted-foreground text-left" suppressHydrationWarning>
+                      {t('worker.jobDetails.coverLetterHint')}
                     </p>
                   </div>
 
                   {/* Resume Upload */}
                   <div className="space-y-2">
-                    <Label>Resume / CV {job?.jobNature === 'technical' ? '(Recommended)' : '(Optional)'}</Label>
+                    <Label suppressHydrationWarning>{t(job?.jobNature === 'technical' ? 'worker.jobDetails.resumeRecommended' : 'worker.jobDetails.resumeOptional')}</Label>
                     {resumeFile ? (
                       <div className="flex items-center gap-3 rounded-md border bg-muted/30 px-3 py-2">
                         <FileText className="h-5 w-5 text-green-600 shrink-0" />
@@ -615,19 +615,19 @@ export default function JobDetailsPage() {
                       <div className="flex items-center gap-3 rounded-md border bg-green-50 dark:bg-green-950/30 px-3 py-2">
                         <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
                         <div className="flex-1">
-                          <p className="text-sm font-medium">Profile resume will be attached</p>
-                          <p className="text-xs text-muted-foreground">Or upload a different one below</p>
+                          <p className="text-sm font-medium" suppressHydrationWarning>{t('worker.jobDetails.resumeAttached')}</p>
+                          <p className="text-xs text-muted-foreground" suppressHydrationWarning>{t('worker.jobDetails.resumeReplace')}</p>
                         </div>
                         <input type="file" accept=".pdf,.doc,.docx,.txt" id="app-resume-input" className="hidden"
                           onChange={(e) => {
                             const f = e.target.files?.[0];
                             if (f && f.size <= 5 * 1024 * 1024) setResumeFile(f);
-                            else if (f) toast({ title: 'File too large', description: 'Max 5MB', variant: 'destructive' });
+                            else if (f) toast({ title: t('worker.jobDetails.fileTooLarge'), description: t('worker.jobDetails.fileTooLargeDesc'), variant: 'destructive' });
                           }}
                         />
                         <label htmlFor="app-resume-input">
                           <Button type="button" variant="outline" size="sm" asChild>
-                            <span className="cursor-pointer">Replace</span>
+                            <span className="cursor-pointer">{t('worker.jobDetails.replace')}</span>
                           </Button>
                         </label>
                       </div>
@@ -637,18 +637,18 @@ export default function JobDetailsPage() {
                           onChange={(e) => {
                             const f = e.target.files?.[0];
                             if (f && f.size <= 5 * 1024 * 1024) setResumeFile(f);
-                            else if (f) toast({ title: 'File too large', description: 'Max 5MB', variant: 'destructive' });
+                            else if (f) toast({ title: t('worker.jobDetails.fileTooLarge'), description: t('worker.jobDetails.fileTooLargeDesc'), variant: 'destructive' });
                           }}
                         />
                         <label htmlFor="app-resume-input">
                           <Button type="button" variant="outline" size="sm" asChild>
                             <span className="cursor-pointer flex items-center gap-1.5">
                               <Upload className="w-4 h-4" />
-                              Upload Resume
+                              {t('worker.jobDetails.uploadResume')}
                             </span>
                           </Button>
                         </label>
-                        <p className="text-xs text-muted-foreground mt-1">PDF, DOC, DOCX, or TXT — max 5 MB</p>
+                        <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>{t('worker.jobDetails.resumeFormat')}</p>
                       </div>
                     )}
                   </div>
@@ -660,14 +660,14 @@ export default function JobDetailsPage() {
                     >
                       {(applying || resumeUploading) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                       {!applying && !resumeUploading && <Send className="h-4 w-4 mr-2" />}
-                      {resumeUploading ? 'Parsing Resume…' : applying ? 'Submitting…' : 'Submit Application'}
+                      {resumeUploading ? t('worker.jobDetails.parsingResume') : applying ? t('worker.jobDetails.submitting') : t('worker.jobDetails.submitApplication')}
                     </Button>
                     <Button
                       variant="outline"
                       className="w-full sm:w-auto"
                       onClick={() => setShowApplicationForm(false)}
                     >
-                      Cancel
+                      {t('worker.jobDetails.cancel')}
                     </Button>
                   </div>
                 </CardContent>
@@ -681,11 +681,11 @@ export default function JobDetailsPage() {
                     onClick={() => setShowApplicationForm(true)}
                     disabled={job.status !== 'active'}
                   >
-                    Apply Now
+                    {t('worker.jobDetails.applyNow')}
                   </Button>
                   {job.status !== 'active' && (
-                    <p className="text-sm text-center text-muted-foreground">
-                      This job is no longer active
+                    <p className="text-sm text-center text-muted-foreground" suppressHydrationWarning>
+                      {t('worker.jobDetails.jobInactive')}
                     </p>
                   )}
                   <Button
@@ -696,7 +696,7 @@ export default function JobDetailsPage() {
                     disabled={isReported}
                   >
                     <Flag className="h-4 w-4 mr-2" />
-                    {isReported ? '✓ Job Reported' : 'Report this job'}
+                    <span suppressHydrationWarning>{isReported ? `✓ ${t('worker.jobDetails.jobReported')}` : t('worker.jobDetails.reportJob')}</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -709,44 +709,44 @@ export default function JobDetailsPage() {
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2" suppressHydrationWarning>
               <Flag className="h-5 w-5 text-destructive" />
-              Report this Job
+              {t('worker.jobDetails.reportThisJob')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label className="text-sm font-medium mb-3 block">Reason</Label>
+              <Label className="text-sm font-medium mb-3 block" suppressHydrationWarning>{t('worker.jobDetails.reportReason')}</Label>
               <RadioGroup value={reportReason} onValueChange={setReportReason} className="space-y-2">
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="fake_job" id="rj-fake" />
-                  <Label htmlFor="rj-fake">Fake or scam job listing</Label>
+                  <Label htmlFor="rj-fake" suppressHydrationWarning>{t('worker.jobDetails.reportFake')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="payment_issue" id="rj-pay" />
-                  <Label htmlFor="rj-pay">Payment issue or non-payment history</Label>
+                  <Label htmlFor="rj-pay" suppressHydrationWarning>{t('worker.jobDetails.reportPayment')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="misleading" id="rj-mislead" />
-                  <Label htmlFor="rj-mislead">Misleading job description</Label>
+                  <Label htmlFor="rj-mislead" suppressHydrationWarning>{t('worker.jobDetails.reportMisleading')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="illegal" id="rj-illegal" />
-                  <Label htmlFor="rj-illegal">Illegal or unsafe work</Label>
+                  <Label htmlFor="rj-illegal" suppressHydrationWarning>{t('worker.jobDetails.reportIllegal')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="spam" id="rj-spam" />
-                  <Label htmlFor="rj-spam">Spam or duplicate posting</Label>
+                  <Label htmlFor="rj-spam" suppressHydrationWarning>{t('worker.jobDetails.reportSpam')}</Label>
                 </div>
               </RadioGroup>
             </div>
             <div>
-              <Label htmlFor="report-job-desc" className="text-sm font-medium mb-1 block">
-                Additional details <span className="text-muted-foreground">(optional)</span>
+              <Label htmlFor="report-job-desc" className="text-sm font-medium mb-1 block" suppressHydrationWarning>
+                {t('worker.jobDetails.reportDetails')} <span className="text-muted-foreground">({t('worker.jobDetails.reportDetailsOptional')})</span>
               </Label>
               <Textarea
                 id="report-job-desc"
-                placeholder="Describe the issue..."
+                placeholder={t('worker.jobDetails.reportPlaceholder')}
                 rows={3}
                 value={reportDesc}
                 onChange={e => setReportDesc(e.target.value)}
@@ -754,9 +754,9 @@ export default function JobDetailsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReportOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setReportOpen(false)}>{t('worker.jobDetails.cancel')}</Button>
             <Button variant="destructive" onClick={handleReportJob} disabled={submittingReport}>
-              {submittingReport ? 'Submitting...' : 'Submit Report'}
+              {submittingReport ? t('worker.jobDetails.submittingReport') : t('worker.jobDetails.submitReport')}
             </Button>
           </DialogFooter>
         </DialogContent>

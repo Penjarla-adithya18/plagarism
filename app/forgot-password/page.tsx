@@ -11,10 +11,12 @@ import { Briefcase, ArrowLeft, Loader2, Phone, Mail } from 'lucide-react'
 import { sendOTP, verifyOTP, forgotPassword, sendEmailOtp, verifyEmailOtp } from '@/lib/auth'
 import { getUserByEmail } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import { useI18n } from '@/contexts/I18nContext'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useI18n()
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)
@@ -152,7 +154,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         <Link href="/login" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-5 transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          Back to Login
+          {t('auth.backHome')}
         </Link>
 
         <Card className="px-6 py-8 shadow-md border">
@@ -174,8 +176,8 @@ export default function ForgotPasswordPage() {
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <h1 className="text-xl font-bold mb-0.5">Forgot Password</h1>
-                <p className="text-sm text-muted-foreground">Verify your identity via phone or email</p>
+                <h1 className="text-xl font-bold mb-0.5">{t('forgot.title')}</h1>
+                <p className="text-sm text-muted-foreground">{t('forgot.subtitle')}</p>
               </div>
 
               {/* Method toggle */}
@@ -186,7 +188,7 @@ export default function ForgotPasswordPage() {
                   className={`flex items-center justify-center gap-1.5 py-1.5 rounded-md text-sm font-medium transition-all ${method === 'phone' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  Phone
+                  {t('forgot.phoneTab')}
                 </button>
                 <button
                   type="button"
@@ -194,17 +196,17 @@ export default function ForgotPasswordPage() {
                   className={`flex items-center justify-center gap-1.5 py-1.5 rounded-md text-sm font-medium transition-all ${method === 'email' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   <Mail className="w-3.5 h-3.5" />
-                  Email
+                  {t('forgot.emailTab')}
                 </button>
               </div>
 
               {method === 'phone' ? (
                 <div className="space-y-2">
-                  <Label htmlFor="fp-phone">Phone Number</Label>
+                  <Label htmlFor="fp-phone">{t('forgot.phoneLabel')}</Label>
                   <Input
                     id="fp-phone"
                     type="tel"
-                    placeholder="10-digit mobile number"
+                    placeholder={t('forgot.phonePh')}
                     maxLength={10}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
@@ -212,11 +214,11 @@ export default function ForgotPasswordPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="fp-email">Email Address</Label>
+                  <Label htmlFor="fp-email">{t('forgot.emailLabel')}</Label>
                   <Input
                     id="fp-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder={t('forgot.emailPh')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value.trim())}
                   />
@@ -224,7 +226,7 @@ export default function ForgotPasswordPage() {
               )}
 
               <Button onClick={handleSendOtp} disabled={loading} className="w-full mt-1">
-                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP...</> : 'Get OTP'}
+                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('forgot.sending')}</> : t('forgot.sendOtp')}
               </Button>
             </div>
           )}
@@ -265,19 +267,19 @@ export default function ForgotPasswordPage() {
           {step === 3 && (
             <div className="space-y-5">
               <div>
-                <h1 className="text-xl font-bold mb-0.5">Set New Password</h1>
+                <h1 className="text-xl font-bold mb-0.5">{t('forgot.resetPassword')}</h1>
                 <p className="text-sm text-muted-foreground">Minimum 8 characters</p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="fp-newpw">New Password</Label>
+                <Label htmlFor="fp-newpw">{t('forgot.newPassword')}</Label>
                 <Input id="fp-newpw" type="password" placeholder="At least 8 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="fp-confirmpw">Confirm Password</Label>
+                <Label htmlFor="fp-confirmpw">{t('forgot.confirmPassword')}</Label>
                 <Input id="fp-confirmpw" type="password" placeholder="Re-enter password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               </div>
               <Button onClick={handleResetPassword} disabled={loading} className="w-full">
-                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Resetting...</> : 'Reset Password'}
+                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('forgot.resetting')}</> : t('forgot.resetPassword')}
               </Button>
             </div>
           )}

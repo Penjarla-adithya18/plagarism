@@ -9,12 +9,14 @@ import { User, Briefcase, Loader2, Phone, ShieldCheck, Lock, Building2, Store, C
 import { useAuth } from '@/contexts/AuthContext';
 import { sendOTP, verifyOTP, registerUser, setUserPassword, sendEmailOtp, verifyEmailOtp } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 function SignupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
   const { toast } = useToast();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<'worker' | 'employer'>(
     (searchParams.get('role') as 'worker' | 'employer') || 'worker'
@@ -72,8 +74,8 @@ function SignupPageContent() {
   const handleSendOTP = async () => {
     if (!formData.phoneNumber || formData.phoneNumber.length !== 10) {
       toast({
-        title: 'Invalid Phone Number',
-        description: 'Please enter a valid 10-digit phone number',
+        title: t('auth.signup.toast.invalidPhone'),
+        description: t('auth.signup.toast.invalidPhoneDesc'),
         variant: 'destructive',
       });
       return;
@@ -85,20 +87,20 @@ function SignupPageContent() {
       if (result.success) {
         setOtpSent(true);
         toast({
-          title: 'OTP Sent',
+          title: t('auth.signup.toast.otpSent'),
           description: result.message,
         });
       } else {
         toast({
-          title: 'Failed to Send OTP',
-          description: result.message || 'Unable to send OTP right now. Please try again.',
+          title: t('auth.signup.toast.otpSendFailed'),
+          description: result.message || t('auth.signup.toast.otpSendFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to send OTP. Please try again.',
+        title: t('auth.signup.toast.error'),
+        description: t('auth.signup.toast.otpSendError'),
         variant: 'destructive',
       });
     } finally {
@@ -109,8 +111,8 @@ function SignupPageContent() {
   const handleVerifyOTP = async () => {
     if (!formData.otp || formData.otp.length !== 6) {
       toast({
-        title: 'Invalid OTP',
-        description: 'Please enter the 6-digit OTP',
+        title: t('auth.signup.toast.invalidOtp'),
+        description: t('auth.signup.toast.invalidOtpDesc'),
         variant: 'destructive',
       });
       return;
@@ -122,20 +124,20 @@ function SignupPageContent() {
       if (result.success) {
         setStep(2);
         toast({
-          title: 'OTP Verified',
-          description: 'Phone number verified successfully',
+          title: t('auth.signup.toast.phoneVerified'),
+          description: t('auth.signup.toast.phoneVerifiedDesc'),
         });
       } else {
         toast({
-          title: 'Verification Failed',
+          title: t('auth.signup.toast.verificationFailed'),
           description: result.message,
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to verify OTP. Please try again.',
+        title: t('auth.signup.toast.error'),
+        description: t('auth.signup.toast.verifyOtpError'),
         variant: 'destructive',
       });
     } finally {
@@ -147,8 +149,8 @@ function SignupPageContent() {
   const handleSendEmailOtp = async () => {
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast({
-        title: 'Invalid Email',
-        description: 'Please enter a valid email address',
+        title: t('auth.signup.toast.invalidEmail'),
+        description: t('auth.signup.toast.invalidEmailDesc'),
         variant: 'destructive',
       });
       return;
@@ -158,12 +160,12 @@ function SignupPageContent() {
       const result = await sendEmailOtp(formData.email, 'signup');
       if (result.success) {
         setEmailOtpSent(true);
-        toast({ title: 'Code Sent', description: 'A 6-digit code has been sent to your email.' });
+        toast({ title: t('auth.signup.toast.emailCodeSent'), description: t('auth.signup.toast.emailCodeSentDesc') });
       } else {
-        toast({ title: 'Failed to Send', description: result.message, variant: 'destructive' });
+        toast({ title: t('auth.signup.toast.emailCodeSendFailed'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Failed to send email OTP. Please try again.', variant: 'destructive' });
+      toast({ title: t('auth.signup.toast.error'), description: t('auth.signup.toast.emailSendError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -171,7 +173,7 @@ function SignupPageContent() {
 
   const handleVerifyEmailOtp = async () => {
     if (!emailOtpInput || emailOtpInput.length !== 6) {
-      toast({ title: 'Invalid Code', description: 'Please enter the 6-digit code from your email', variant: 'destructive' });
+      toast({ title: t('auth.signup.toast.invalidEmailCode'), description: t('auth.signup.toast.invalidEmailCodeDesc'), variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -179,16 +181,16 @@ function SignupPageContent() {
       const result = await verifyEmailOtp(formData.email, emailOtpInput);
       if (result.success) {
         setEmailOtpVerified(true);
-        toast({ title: 'Email Verified ✓', description: 'Your email address has been verified.' });
+        toast({ title: t('auth.signup.toast.emailVerified'), description: t('auth.signup.toast.emailVerifiedDesc') });
         // If this is the step-1 email signup path, advance to step 2
         if (signupMethod === 'email' && step === 1) {
           setStep(2);
         }
       } else {
-        toast({ title: 'Verification Failed', description: result.message, variant: 'destructive' });
+        toast({ title: t('auth.signup.toast.verificationFailed'), description: result.message, variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Failed to verify email OTP. Please try again.', variant: 'destructive' });
+      toast({ title: t('auth.signup.toast.error'), description: t('auth.signup.toast.emailVerifyError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -199,8 +201,8 @@ function SignupPageContent() {
     const pan = panNumber.toUpperCase().trim();
     if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
       toast({
-        title: 'Invalid PAN',
-        description: 'Enter a valid 10-character PAN (e.g. ABCDE1234F)',
+        title: t('auth.signup.toast.invalidPan'),
+        description: t('auth.signup.toast.invalidPanDesc'),
         variant: 'destructive',
       });
       return;
@@ -208,8 +210,8 @@ function SignupPageContent() {
 
     if (!formData.fullName || formData.fullName.length < 3) {
       toast({
-        title: 'Enter Name First',
-        description: 'Please enter your full name before verifying PAN',
+        title: t('auth.signup.toast.nameRequired'),
+        description: t('auth.signup.toast.nameRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -229,29 +231,29 @@ function SignupPageContent() {
       if (data.verified && data.nameMatch) {
         setPanVerified(true);
         toast({
-          title: 'PAN Verified ✓',
-          description: `Identity confirmed: ${data.panName}`,
+          title: t('auth.signup.toast.panVerified'),
+          description: t('auth.signup.toast.panVerifiedDesc', { name: data.panName }),
         });
       } else if (data.verified && !data.nameMatch) {
         setPanVerified(false);
         toast({
-          title: 'Name Mismatch',
-          description: data.message || 'The name you entered does not match the PAN card.',
+          title: t('auth.signup.toast.panNameMismatch'),
+          description: data.message || t('auth.signup.toast.panNameMismatchDesc'),
           variant: 'destructive',
         });
       } else {
         setPanVerified(false);
         toast({
-          title: 'PAN Verification Failed',
-          description: data.message || 'Could not verify PAN. Please check and try again.',
+          title: t('auth.signup.toast.panVerifyFailed'),
+          description: data.message || t('auth.signup.toast.panVerifyFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch (err) {
       setPanVerified(false);
       toast({
-        title: 'Error',
-        description: 'PAN verification service unavailable. Try again later.',
+        title: t('auth.signup.toast.error'),
+        description: t('auth.signup.toast.panServiceError'),
         variant: 'destructive',
       });
     } finally {
@@ -265,8 +267,8 @@ function SignupPageContent() {
     // Validation
     if (!agreeToTerms) {
       toast({
-        title: 'Terms Required',
-        description: 'Please accept the Terms and Conditions to continue',
+        title: t('auth.signup.toast.termsRequired'),
+        description: t('auth.signup.toast.termsRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -274,8 +276,8 @@ function SignupPageContent() {
 
     if (!formData.fullName || formData.fullName.length < 3) {
       toast({
-        title: 'Invalid Name',
-        description: 'Please enter your full name (minimum 3 characters)',
+        title: t('auth.signup.toast.invalidName'),
+        description: t('auth.signup.toast.invalidNameDesc'),
         variant: 'destructive',
       });
       return;
@@ -283,8 +285,8 @@ function SignupPageContent() {
 
     if (!panVerified && !bypassPanVerification) {
       toast({
-        title: 'PAN Verification Required',
-        description: 'Please verify your PAN card to complete registration',
+        title: t('auth.signup.toast.panRequired'),
+        description: t('auth.signup.toast.panRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -293,8 +295,8 @@ function SignupPageContent() {
 
     if (formData.password.length < 8) {
       toast({
-        title: 'Weak Password',
-        description: 'Password must be at least 8 characters long',
+        title: t('auth.signup.toast.weakPassword'),
+        description: t('auth.signup.toast.weakPasswordDesc'),
         variant: 'destructive',
       });
       return;
@@ -302,8 +304,8 @@ function SignupPageContent() {
 
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: 'Password Mismatch',
-        description: 'Passwords do not match',
+        title: t('auth.signup.toast.passwordMismatch'),
+        description: t('auth.signup.toast.passwordMismatchDesc'),
         variant: 'destructive',
       });
       return;
@@ -311,8 +313,8 @@ function SignupPageContent() {
 
     if (role === 'employer' && !formData.businessName) {
       toast({
-        title: 'Business Name Required',
-        description: 'Please enter your business or shop name',
+        title: t('auth.signup.toast.businessNameRequired'),
+        description: t('auth.signup.toast.businessNameRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -345,8 +347,8 @@ function SignupPageContent() {
 
         login(result.user);
         toast({
-          title: 'Registration Successful',
-          description: `Welcome to HyperLocal Jobs!`,
+          title: t('auth.signup.toast.registrationSuccess'),
+          description: t('auth.signup.toast.registrationSuccessDesc'),
         });
 
         // Redirect based on role
@@ -357,15 +359,15 @@ function SignupPageContent() {
         }
       } else {
         toast({
-          title: 'Registration Failed',
+          title: t('auth.signup.toast.registrationFailed'),
           description: result.message,
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        title: t('auth.signup.toast.error'),
+        description: t('auth.signup.toast.registrationError'),
         variant: 'destructive',
       });
     } finally {
@@ -376,8 +378,8 @@ function SignupPageContent() {
   const handleContinueToSecurity = () => {
     if (!formData.fullName || formData.fullName.length < 3) {
       toast({
-        title: 'Invalid Name',
-        description: 'Please enter your full name (minimum 3 characters)',
+        title: t('auth.signup.toast.invalidName'),
+        description: t('auth.signup.toast.invalidNameDesc'),
         variant: 'destructive',
       });
       return;
@@ -387,8 +389,8 @@ function SignupPageContent() {
     if (signupMethod === 'email') {
       if (!formData.phoneNumber || formData.phoneNumber.length !== 10) {
         toast({
-          title: 'Phone Number Required',
-          description: 'Please enter your 10-digit mobile number to continue',
+          title: t('auth.signup.toast.phoneRequired'),
+          description: t('auth.signup.toast.phoneRequiredDesc'),
           variant: 'destructive',
         });
         return;
@@ -397,8 +399,8 @@ function SignupPageContent() {
 
     if (role === 'employer' && !formData.businessName) {
       toast({
-        title: 'Business Name Required',
-        description: 'Please enter your business or shop name',
+        title: t('auth.signup.toast.businessNameRequired'),
+        description: t('auth.signup.toast.businessNameRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -406,8 +408,8 @@ function SignupPageContent() {
 
     if (!panVerified && !bypassPanVerification) {
       toast({
-        title: 'PAN Verification Required',
-        description: 'Please verify your PAN card to continue',
+        title: t('auth.signup.toast.panRequired'),
+        description: t('auth.signup.toast.panRequiredStep2Desc'),
         variant: 'destructive',
       });
       return;
@@ -429,19 +431,18 @@ function SignupPageContent() {
 
           <div className="z-10 mt-4 max-w-md md:mt-0">
             <h1 className="mb-6 text-5xl font-bold leading-[1.05] text-slate-900 md:text-6xl dark:text-white">
-              Join your <br />
-              local <br />
+              {t('auth.signup.hero.joinYour')} <br />
+              {t('auth.signup.hero.local')} <br />
               <span className="relative inline-block text-emerald-500 dark:text-emerald-400">
-                workforce
+                {t('auth.signup.hero.workforce')}
                 <svg className="absolute -bottom-1 left-0 -z-10 h-3 w-full text-blue-200 dark:text-blue-900/70" viewBox="0 0 100 10" preserveAspectRatio="none">
                   <path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" strokeWidth="8" />
                 </svg>
               </span>{' '}
-              network.
+              {t('auth.signup.hero.network')}
             </h1>
             <p className="mb-10 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-              Create your account to discover nearby opportunities, connect with trusted people,
-              and grow in your community.
+              {t('auth.signup.hero.description')}
             </p>
 
             <div className="relative mt-8 hidden h-56 w-full md:block">
@@ -458,33 +459,33 @@ function SignupPageContent() {
 
         <section className="relative z-20 flex w-full flex-col items-center justify-start overflow-y-auto bg-white p-5 pt-6 shadow-2xl sm:p-7 md:h-[82vh] md:w-7/12 md:justify-start md:rounded-l-[2.5rem] md:p-8 md:pt-16 md:shadow-none lg:p-10 dark:bg-slate-950">
           <Link href="/" className="mb-4 inline-flex items-center self-start text-sm font-medium text-slate-500 transition-colors hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 md:absolute md:left-8 md:top-8 md:mb-0">
-            ← Back to Home
+            {t('auth.signup.backToHome')}
           </Link>
           <div className="w-full max-w-md space-y-5 py-1 sm:space-y-6 md:py-4">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Sign up</h2>
-              <p className="text-sm text-gray-500 dark:text-slate-400">Create your account in 2 quick steps.</p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('auth.signup.title')}</h2>
+              <p className="text-sm text-gray-500 dark:text-slate-400">{t('auth.signup.subtitle')}</p>
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                   step === 1
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
                     : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                 }`}>
-                  Step 1: Verify identity
+                  {t('auth.signup.step1Label')}
                 </span>
                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                   step === 2
                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                     : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                 }`}>
-                  Step 2: Profile & KYC
+                  {t('auth.signup.step2Label')}
                 </span>
                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                   step === 3
                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
                     : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                 }`}>
-                  Step 3: Security
+                  {t('auth.signup.step3Label')}
                 </span>
               </div>
             </div>
@@ -500,7 +501,7 @@ function SignupPageContent() {
                 }`}
               >
                 <User className="h-4 w-4" />
-                Worker
+                {t('auth.signup.roleWorker')}
               </button>
               <button
                 type="button"
@@ -512,14 +513,14 @@ function SignupPageContent() {
                 }`}
               >
                 <Briefcase className="h-4 w-4" />
-                Employer
+                {t('auth.signup.roleEmployer')}
               </button>
             </div>
 
             {step === 1 ? (
               <div className="space-y-5 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 sm:p-5 dark:border-slate-700 dark:bg-slate-900/50">
                 <p className="text-sm text-gray-500 dark:text-slate-400">
-                  Sign up using your phone number or email address.
+                  {t('auth.signup.step1.description')}
                 </p>
 
                 {/* Method toggle */}
@@ -534,7 +535,7 @@ function SignupPageContent() {
                           : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
                       }`}
                     >
-                      <Phone className="h-4 w-4" /> Phone
+                      <Phone className="h-4 w-4" /> {t('auth.signup.step1.methodPhone')}
                     </button>
                     <button
                       type="button"
@@ -545,7 +546,7 @@ function SignupPageContent() {
                           : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
                       }`}
                     >
-                      <Mail className="h-4 w-4" /> Email
+                      <Mail className="h-4 w-4" /> {t('auth.signup.step1.methodEmail')}
                     </button>
                   </div>
                 )}
@@ -560,7 +561,7 @@ function SignupPageContent() {
                       <input
                         id="phoneNumber"
                         type="tel"
-                        placeholder="10-digit phone number"
+                        placeholder={t('auth.signup.step1.phonePlaceholder')}
                         value={formData.phoneNumber}
                         onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                         disabled={otpSent}
@@ -572,11 +573,11 @@ function SignupPageContent() {
                     {!otpSent ? (
                       <>
                         <button onClick={handleSendOTP} disabled={loading} className="group relative flex w-full justify-center rounded-xl border border-transparent bg-gradient-to-r from-emerald-500 to-blue-500 px-4 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:from-emerald-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70">
-                          {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Sending...</> : <><ShieldCheck className="mr-2 h-5 w-5" />Send OTP</>}
+                          {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />{t('auth.signup.step1.sendingOtp')}</> : <><ShieldCheck className="mr-2 h-5 w-5" />{t('auth.signup.step1.sendOtpButton')}</>}
                         </button>
                         <p className="text-center text-sm text-gray-500 dark:text-slate-400">
-                          Already have an account?{' '}
-                          <Link className="font-medium text-emerald-500 hover:text-blue-500" href="/login">Log in</Link>
+                          {t('auth.signup.step1.alreadyHaveAccount')}{' '}
+                          <Link className="font-medium text-emerald-500 hover:text-blue-500" href="/login">{t('auth.signup.step1.loginLink')}</Link>
                         </p>
                       </>
                     ) : (
@@ -595,10 +596,10 @@ function SignupPageContent() {
                           />
                         </div>
                         <button onClick={handleVerifyOTP} disabled={loading} className="flex w-full justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 px-4 py-3.5 text-sm font-bold text-white shadow transition-all hover:-translate-y-0.5 hover:from-emerald-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70">
-                          {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Verifying...</> : 'Verify OTP'}
+                          {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />{t('auth.signup.step1.verifyingOtp')}</> : t('auth.signup.step1.verifyOtpButton')}
                         </button>
                         <button type="button" onClick={() => { setOtpSent(false); setFormData({ ...formData, otp: '' }); }} className="w-full text-center text-sm text-gray-400 hover:text-emerald-500 transition-colors py-1">
-                          ← Change phone number
+                          {t('auth.signup.step1.changePhoneNumber')}
                         </button>
                       </>
                     )}
@@ -617,7 +618,7 @@ function SignupPageContent() {
                         }`} />
                       </div>
                       <input
-                        id="email" type="email" placeholder="your@email.com"
+                        id="email" type="email" placeholder={t('auth.signup.step1.emailPlaceholder')}
                         value={formData.email}
                         onChange={(e) => { setFormData({ ...formData, email: e.target.value }); if (emailOtpSent) { setEmailOtpSent(false); setEmailOtpInput(''); setEmailOtpVerified(false); } }}
                         disabled={emailOtpSent}
@@ -632,24 +633,24 @@ function SignupPageContent() {
                           disabled={loading || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)}
                           className="flex w-full justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-3.5 text-sm font-bold text-white shadow transition-all hover:-translate-y-0.5 hover:from-blue-600 hover:to-indigo-600 disabled:cursor-not-allowed disabled:opacity-70"
                         >
-                          {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Sending...</> : <><Mail className="mr-2 h-5 w-5" />Send Verification Code</>}
+                          {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />{t('auth.signup.step1.sendingOtp')}</> : <><Mail className="mr-2 h-5 w-5" />{t('auth.signup.step1.sendEmailCodeButton')}</>}
                         </button>
                         <p className="text-center text-sm text-gray-500 dark:text-slate-400">
-                          Already have an account?{' '}
-                          <Link className="font-medium text-emerald-500 hover:text-blue-500" href="/login">Log in</Link>
+                          {t('auth.signup.step1.alreadyHaveAccount')}{' '}
+                          <Link className="font-medium text-emerald-500 hover:text-blue-500" href="/login">{t('auth.signup.step1.loginLink')}</Link>
                         </p>
                       </>
                     )}
 
                     {emailOtpSent && !emailOtpVerified && (
                       <>
-                        <p className="text-xs text-gray-500 dark:text-slate-400">Code sent to <strong>{formData.email}</strong></p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{t('auth.signup.step1.codeSentTo')} <strong>{formData.email}</strong></p>
                         <div className="group relative rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
                           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                             <ShieldCheck className="h-5 w-5 text-gray-400 group-focus-within:text-blue-400" />
                           </div>
                           <input
-                            id="emailOtp" type="text" inputMode="numeric" placeholder="6-digit code"
+                            id="emailOtp" type="text" inputMode="numeric" placeholder={t('auth.signup.step1.emailOtpPlaceholder')}
                             value={emailOtpInput}
                             onChange={(e) => setEmailOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
                             maxLength={6}
@@ -659,16 +660,16 @@ function SignupPageContent() {
                         <div className="flex gap-2">
                           <button type="button" onClick={handleVerifyEmailOtp} disabled={loading || emailOtpInput.length !== 6}
                             className="flex flex-1 justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-3 text-sm font-bold text-white shadow transition hover:from-blue-600 hover:to-indigo-600 disabled:cursor-not-allowed disabled:opacity-70">
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Verify
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} {t('auth.signup.step1.verifyButton')}
                           </button>
                           <button type="button" onClick={() => { setEmailOtpSent(false); setEmailOtpInput(''); }}
                             className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-gray-500 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-950">
-                            Resend
+                            {t('auth.signup.step1.resendButton')}
                           </button>
                         </div>
                         <button type="button" onClick={() => { setEmailOtpSent(false); setEmailOtpInput(''); setEmailOtpVerified(false); }}
                           className="w-full text-center text-sm text-gray-400 hover:text-blue-500 transition-colors py-1">
-                          ← Change email address
+                          {t('auth.signup.step1.changeEmailAddress')}
                         </button>
                       </>
                     )}
@@ -686,7 +687,7 @@ function SignupPageContent() {
                       : <>Email <strong>{formData.email}</strong> verified</>}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-slate-400">Add your profile details. You can add the other contact method later from your profile.</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400">{t('auth.signup.step2.description')}</p>
 
                 <div className="space-y-4">
                   <div className="group relative rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
@@ -696,7 +697,7 @@ function SignupPageContent() {
                     <input
                       id="fullName"
                       type="text"
-                      placeholder="Full Name"
+                      placeholder={t('auth.signup.step2.fullNamePlaceholder')}
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       className="relative block w-full appearance-none border-0 bg-transparent px-3 py-2 pl-10 text-base text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
@@ -709,11 +710,11 @@ function SignupPageContent() {
                     <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
-                          <Mail className="h-3.5 w-3.5" /> Email Address
+                          <Mail className="h-3.5 w-3.5" /> {t('auth.signup.step2.emailLabel')}
                         </div>
                         {emailOtpVerified
-                          ? <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" />Verified</span>
-                          : <span className="text-xs text-slate-400">Optional — add later</span>}
+                          ? <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" />{t('auth.signup.step2.verifiedLabel')}</span>
+                          : <span className="text-xs text-slate-400">{t('auth.signup.step2.optionalAddLater')}</span>}
                       </div>
                       {!emailOtpVerified ? (
                         <>
@@ -724,7 +725,7 @@ function SignupPageContent() {
                               <Mail className={`h-5 w-5 transition-colors ${formData.email ? 'text-blue-400' : 'text-gray-400 group-focus-within:text-blue-400'}`} />
                             </div>
                             <input
-                              id="email" type="email" placeholder="your@email.com (optional)"
+                              id="email" type="email" placeholder={t('auth.signup.step2.emailPlaceholderOptional')}
                               value={formData.email}
                               onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setEmailOtpSent(false); setEmailOtpInput(''); }}
                               disabled={emailOtpSent}
@@ -734,17 +735,17 @@ function SignupPageContent() {
                           {formData.email && !emailOtpSent && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
                             <button type="button" onClick={handleSendEmailOtp} disabled={loading}
                               className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-950/30 dark:text-blue-400">
-                              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Verify Email
+                              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} {t('auth.signup.step2.verifyEmailButton')}
                             </button>
                           )}
                           {emailOtpSent && (
                             <div className="space-y-2">
-                              <p className="text-xs text-gray-500">Code sent to <strong>{formData.email}</strong></p>
+                              <p className="text-xs text-gray-500">{t('auth.signup.step1.codeSentTo')} <strong>{formData.email}</strong></p>
                               <div className="group relative rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                   <ShieldCheck className="h-5 w-5 text-gray-400 group-focus-within:text-blue-400" />
                                 </div>
-                                <input id="emailOtp" type="text" inputMode="numeric" placeholder="6-digit code"
+                                <input id="emailOtp" type="text" inputMode="numeric" placeholder={t('auth.signup.step2.emailOtpPlaceholder')}
                                   value={emailOtpInput} onChange={(e) => setEmailOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                   maxLength={6}
                                   className="relative block w-full appearance-none border-0 bg-transparent px-3 py-2 pl-10 text-base tracking-widest text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500" />
@@ -752,10 +753,10 @@ function SignupPageContent() {
                               <div className="flex gap-2">
                                 <button type="button" onClick={handleVerifyEmailOtp} disabled={loading || emailOtpInput.length !== 6}
                                   className="flex flex-1 justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-2.5 text-sm font-bold text-white shadow transition disabled:opacity-50">
-                                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Verify
+                                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} {t('auth.signup.step1.verifyButton')}
                                 </button>
                                 <button type="button" onClick={() => { setEmailOtpSent(false); setEmailOtpInput(''); }}
-                                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-950">Resend</button>
+                                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-950">{t('auth.signup.step1.resendButton')}</button>
                               </div>
                             </div>
                           )}
@@ -764,10 +765,10 @@ function SignupPageContent() {
                         <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 dark:bg-emerald-950/30">
                           <span className="text-sm text-emerald-700 dark:text-emerald-300">{formData.email}</span>
                           <button type="button" onClick={() => { setEmailOtpVerified(false); setEmailOtpSent(false); setEmailOtpInput(''); }}
-                            className="text-xs text-gray-400 hover:text-gray-600 underline">Change</button>
+                            className="text-xs text-gray-400 hover:text-gray-600 underline">{t('auth.signup.step2.changeButton')}</button>
                         </div>
                       )}
-                      <p className="text-xs text-gray-400 dark:text-slate-500">For job alerts and account security.</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{t('auth.signup.step2.emailPurpose')}</p>
                     </div>
                   )}
 
@@ -776,23 +777,23 @@ function SignupPageContent() {
                     <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
-                          <Phone className="h-3.5 w-3.5" /> Phone Number
+                          <Phone className="h-3.5 w-3.5" /> {t('auth.signup.step2.phoneLabel')}
                         </div>
-                        <span className="text-xs text-rose-500 font-medium">Required</span>
+                        <span className="text-xs text-rose-500 font-medium">{t('auth.signup.step2.requiredLabel')}</span>
                       </div>
                       <div className="group relative rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                           <Phone className="h-5 w-5 text-gray-400 group-focus-within:text-emerald-500" />
                         </div>
                         <input
-                          id="phoneNumber" type="tel" placeholder="10-digit mobile number"
+                          id="phoneNumber" type="tel" placeholder={t('auth.signup.step2.phonePlaceholder')}
                           value={formData.phoneNumber}
                           onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                           maxLength={10}
                           className="relative block w-full appearance-none border-0 bg-transparent px-3 py-2 pl-10 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
                         />
                       </div>
-                      <p className="text-xs text-gray-400 dark:text-slate-500">Used for account access. You can verify it later from your profile.</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{t('auth.signup.step2.phoneHelperText')}</p>
                     </div>
                   )}
 
@@ -805,7 +806,7 @@ function SignupPageContent() {
                         <input
                           id="businessName"
                           type="text"
-                          placeholder="Business / Shop Name"
+                          placeholder={t('auth.signup.step2.businessNamePlaceholder')}
                           value={formData.businessName}
                           onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                           className="relative block w-full appearance-none border-0 bg-transparent px-3 py-2 pl-10 text-base text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
@@ -820,7 +821,7 @@ function SignupPageContent() {
                         <input
                           id="organizationName"
                           type="text"
-                          placeholder="Organization Name (Optional)"
+                          placeholder={t('auth.signup.step2.organizationNamePlaceholder')}
                           value={formData.organizationName}
                           onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                           className="relative block w-full appearance-none border-0 bg-transparent px-3 py-2 pl-10 text-base text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
@@ -834,10 +835,10 @@ function SignupPageContent() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
                         <CreditCard className="h-3.5 w-3.5" />
-                        PAN Card Verification (KYC)
+                        {t('auth.signup.step2.panHeading')}
                       </div>
                       <p className="text-xs text-gray-500 dark:text-slate-400">
-                        Enter your PAN number and verify to continue account creation.
+                        {t('auth.signup.step2.panDescription')}
                       </p>
                     </div>
 
@@ -859,7 +860,7 @@ function SignupPageContent() {
                         <input
                           id="panNumber"
                           type="text"
-                          placeholder="PAN Number (e.g. ABCDE1234F)"
+                          placeholder={t('auth.signup.step2.panPlaceholder')}
                           value={panNumber}
                           onChange={(e) => {
                             const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
@@ -887,12 +888,12 @@ function SignupPageContent() {
                         {panVerifying ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            Verifying PAN...
+                            {t('auth.signup.step2.verifyingPan')}
                           </>
                         ) : (
                           <>
                             <ShieldCheck className="h-4 w-4" />
-                            Verify PAN Card
+                            {t('auth.signup.step2.verifyPanButton')}
                           </>
                         )}
                       </button>
@@ -920,8 +921,8 @@ function SignupPageContent() {
                             <p className="font-medium leading-relaxed">{panResult.message}</p>
                             {panResult.panName && (
                               <p className="text-xs opacity-80">
-                                PAN registered to: <strong>{panResult.panName}</strong>
-                                {panResult.similarity !== undefined && ` (${panResult.similarity}% match)`}
+                                {t('auth.signup.step2.panRegisteredTo')} <strong>{panResult.panName}</strong>
+                                {panResult.similarity !== undefined && ` (${panResult.similarity}% {t('auth.signup.step2.match')})`}
                               </p>
                             )}
                           </div>
@@ -939,7 +940,7 @@ function SignupPageContent() {
                         }}
                         className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900"
                       >
-                        Change PAN Number
+                        {t('auth.signup.step2.changePanButton')}
                       </button>
                     )}
 
@@ -951,7 +952,7 @@ function SignupPageContent() {
                         className="mt-0.5"
                       />
                       <label htmlFor="bypassPan" className="cursor-pointer text-sm leading-relaxed text-gray-600 dark:text-slate-400">
-                        Bypass PAN verification for now and continue signup.
+                        {t('auth.signup.step2.bypassPanCheckbox')}
                       </label>
                     </div>
                   </div>
@@ -963,20 +964,20 @@ function SignupPageContent() {
                     onClick={() => setStep(1)}
                     className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
-                    Back
+                    {t('auth.signup.step2.backButton')}
                   </button>
                   <button
                     type="button"
                     onClick={handleContinueToSecurity}
                     className="w-full rounded-xl border border-transparent bg-gradient-to-r from-emerald-500 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-md transition hover:from-emerald-600 hover:to-blue-600"
                   >
-                    Continue
+                    {t('auth.signup.step2.continueButton')}
                   </button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleRegister} className="space-y-6 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 sm:p-5 dark:border-slate-700 dark:bg-slate-900/50">
-                <p className="text-sm text-gray-500 dark:text-slate-400">Set your password and complete registration.</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400">{t('auth.signup.step3.description')}</p>
 
                 <div className="space-y-4">
                   <div className="group relative rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
@@ -986,7 +987,7 @@ function SignupPageContent() {
                     <input
                       id="password"
                       type="password"
-                      placeholder="Password (minimum 8 characters)"
+                      placeholder={t('auth.signup.step3.passwordPlaceholder')}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       minLength={8}
@@ -1002,7 +1003,7 @@ function SignupPageContent() {
                     <input
                       id="confirmPassword"
                       type="password"
-                      placeholder="Confirm Password"
+                      placeholder={t('auth.signup.step3.confirmPasswordPlaceholder')}
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       className="relative block w-full appearance-none border-0 bg-transparent px-3 py-2 pl-10 text-base text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
@@ -1019,13 +1020,13 @@ function SignupPageContent() {
                     className="mt-1"
                   />
                   <label htmlFor="terms" className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed cursor-pointer">
-                    I agree to the{' '}
+                    {t('auth.signup.step3.agreePrefix')}{' '}
                     <Link href="/terms" target="_blank" className="text-emerald-500 hover:text-emerald-600 font-medium underline">
-                      Terms and Conditions
+                      {t('auth.signup.step3.termsLink')}
                     </Link>{' '}
-                    and{' '}
+                    {t('auth.signup.step3.andText')}{' '}
                     <Link href="/privacy" target="_blank" className="text-emerald-500 hover:text-emerald-600 font-medium underline">
-                      Privacy Policy
+                      {t('auth.signup.step3.privacyLink')}
                     </Link>
                   </label>
                 </div>
@@ -1038,10 +1039,10 @@ function SignupPageContent() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin text-emerald-100" />
-                      Creating Account...
+                      {t('auth.signup.step3.creatingAccount')}
                     </>
                   ) : (
-                    'CREATE ACCOUNT'
+                    t('auth.signup.step3.createAccountButton')
                   )}
                 </button>
 
@@ -1050,13 +1051,13 @@ function SignupPageContent() {
                   onClick={() => setStep(2)}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
-                  Back
+                  {t('auth.signup.step3.backButton')}
                 </button>
               </form>
             )}
 
             <p className="text-center text-xs leading-relaxed text-gray-500 dark:text-slate-400">
-              By signing up, you agree to our Terms of Service and Privacy Policy
+              {t('auth.signup.step3.footerDisclaimer')}
             </p>
           </div>
         </section>

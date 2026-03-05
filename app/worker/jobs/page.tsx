@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import { applicationOps, jobOps, workerProfileOps } from '@/lib/api'
 import { getRecommendedJobs, getBasicRecommendations, matchJobs } from '@/lib/aiMatching'
 import { Application, Job, User, WorkerProfile } from '@/lib/types'
@@ -23,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function WorkerJobsPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useI18n()
   const [jobs, setJobs] = useState<Job[]>([])
   const [matchedJobs, setMatchedJobs] = useState<Array<{ job: Job; score: number }>>([])
   const [workerProfile, setWorkerProfile] = useState<WorkerProfile | null>(null)
@@ -120,7 +122,7 @@ export default function WorkerJobsPage() {
   const getDistanceText = (job: Job) => {
     const km = getDistanceKm(job)
     if (km === null) return null
-    return km < 1 ? `${Math.round(km * 1000)} m away` : `${km.toFixed(1)} km away`
+    return km < 1 ? `${Math.round(km * 1000)} ${t('worker.jobs.mAway')}` : `${km.toFixed(1)} ${t('worker.jobs.kmAway')}`
   }
 
   const isProfileReady = useMemo(() => {
@@ -213,30 +215,30 @@ export default function WorkerJobsPage() {
 
     if (!isProfileReady) {
       insights.push({
-        title: 'Complete Your Profile',
-        desc: 'Add categories, skills, location and availability to unlock full AI matching.',
+        title: t('worker.jobs.insightCompleteProfile'),
+        desc: t('worker.jobs.insightCompleteProfileDesc'),
         color: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100',
       })
     }
 
     insights.push({
-      title: topFiveMatches.length >= 5 ? 'Keep It Up!' : 'Stay Active',
+      title: topFiveMatches.length >= 5 ? t('worker.jobs.insightKeepItUp') : t('worker.jobs.insightStayActive'),
       desc: topFiveMatches.length >= 5
-        ? 'You have strong matches today. Apply early to improve acceptance chances.'
-        : 'New jobs are posted frequently. Check this page daily for better opportunities.',
+        ? t('worker.jobs.insightKeepItUpDesc')
+        : t('worker.jobs.insightStayActiveDesc'),
       color: 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100',
     })
 
     insights.push({
-      title: missingSkills.length > 0 ? 'Skill Booster' : 'Profile Momentum',
+      title: missingSkills.length > 0 ? t('worker.jobs.insightSkillBooster') : t('worker.jobs.insightProfileMomentum'),
       desc: missingSkills.length > 0
-        ? `Learning ${missingSkills.slice(0, 2).map((s) => s.skill).join(' & ')} can improve your match score quickly.`
-        : 'Your current skills align well with job demand. Keep your profile updated.',
+        ? t('worker.jobs.insightSkillBoosterDesc', { skills: missingSkills.slice(0, 2).map((s) => s.skill).join(' & ') })
+        : t('worker.jobs.insightProfileMomentumDesc'),
       color: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100',
     })
 
     return insights.slice(0, 3)
-  }, [isProfileReady, topFiveMatches.length, missingSkills])
+  }, [isProfileReady, topFiveMatches.length, missingSkills, t])
 
   const getMatchBadgeClass = (score: number) => {
     if (score >= 80) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
@@ -253,15 +255,15 @@ export default function WorkerJobsPage() {
         <CardHeader>
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1">
-              <CardTitle className="text-xl mb-2">{job.title}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Company
+              <CardTitle className="text-xl mb-2" suppressHydrationWarning>{job.title}</CardTitle>
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {t('worker.jobs.company')}
               </p>
             </div>
             {typeof matchScore === 'number' && (
               <Badge className={`gap-1 ${getMatchBadgeClass(matchScore)}`}>
                 <Sparkles className="h-3 w-3" />
-                {matchScore}% Match
+                <span suppressHydrationWarning>{matchScore}% {t('worker.jobs.match')}</span>
               </Badge>
             )}
           </div>
@@ -290,12 +292,12 @@ export default function WorkerJobsPage() {
             ) : (
               <div className="flex items-center gap-2 text-sm text-muted-foreground/60">
                 <Route className="h-4 w-4 shrink-0" />
-                <span className="truncate text-xs">Enable location for distance</span>
+                <span className="truncate text-xs" suppressHydrationWarning>{t('worker.jobs.enableLocation')}</span>
               </div>
             )}
             <div className="flex items-center gap-2 text-sm">
               <IndianRupee className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold truncate">₹{job.payAmount}/{job.payType === 'hourly' ? 'hr' : 'fixed'}</span>
+              <span className="font-semibold truncate" suppressHydrationWarning>₹{job.payAmount}/{job.payType === 'hourly' ? t('worker.jobs.hourly') : t('worker.jobs.fixed')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -307,8 +309,8 @@ export default function WorkerJobsPage() {
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Shield className={`h-4 w-4 ${job.escrowRequired !== false ? 'text-green-500' : 'text-slate-400'}`} />
-              <span className={job.escrowRequired !== false ? 'text-green-600 dark:text-green-400' : 'text-slate-500'}>
-                {job.escrowRequired !== false ? 'Payment Secured' : 'No Escrow'}
+              <span className={job.escrowRequired !== false ? 'text-green-600 dark:text-green-400' : 'text-slate-500'} suppressHydrationWarning>
+                {job.escrowRequired !== false ? t('worker.jobs.paymentSecured') : t('worker.jobs.noEscrow')}
               </span>
             </div>
           </div>
@@ -317,8 +319,9 @@ export default function WorkerJobsPage() {
             <Button
               className="flex-1"
               onClick={() => router.push(`/worker/jobs/${job.id}`)}
+              suppressHydrationWarning
             >
-              {hasApplied ? 'View Application' : 'View Details'}
+              {hasApplied ? t('worker.jobs.viewApplication') : t('worker.jobs.viewDetails')}
             </Button>
           </div>
         </CardContent>
@@ -332,9 +335,9 @@ export default function WorkerJobsPage() {
         <WorkerNav />
         <div className="container mx-auto px-4 py-20 text-center">
           <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-semibold mb-2">Session Expired</h2>
-          <p className="text-muted-foreground mb-6">Your session has expired. Please log in again to continue.</p>
-          <Button onClick={() => router.push('/login')}>Log In Again</Button>
+          <h2 className="text-xl font-semibold mb-2" suppressHydrationWarning>{t('worker.jobs.sessionExpired')}</h2>
+          <p className="text-muted-foreground mb-6" suppressHydrationWarning>{t('worker.jobs.sessionExpiredDesc')}</p>
+          <Button onClick={() => router.push('/login')} suppressHydrationWarning>{t('worker.jobs.logInAgain')}</Button>
         </div>
       </div>
     )
@@ -400,27 +403,27 @@ export default function WorkerJobsPage() {
       
       <main className="container mx-auto px-4 py-6 md:py-8 pb-28 md:pb-8">
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Find Jobs</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Browse and apply to jobs that match your skills</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2" suppressHydrationWarning>{t('worker.jobs.title')}</h1>
+          <p className="text-sm md:text-base text-muted-foreground" suppressHydrationWarning>{t('worker.jobs.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Active Jobs</div>
-              <div className="text-2xl font-bold mt-1">{jobs.length}</div>
+              <div className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.jobs.activeJobs')}</div>
+              <div className="text-2xl font-bold mt-1" suppressHydrationWarning>{jobs.length}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Top AI Matches</div>
-              <div className="text-2xl font-bold mt-1">{topFiveMatches.length}</div>
+              <div className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.jobs.topMatches')}</div>
+              <div className="text-2xl font-bold mt-1" suppressHydrationWarning>{topFiveMatches.length}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Applications Sent</div>
-              <div className="text-2xl font-bold mt-1">{applications.length}</div>
+              <div className="text-sm text-muted-foreground" suppressHydrationWarning>{t('worker.jobs.applicationsSent')}</div>
+              <div className="text-2xl font-bold mt-1" suppressHydrationWarning>{applications.length}</div>
             </CardContent>
           </Card>
         </div>
@@ -428,14 +431,14 @@ export default function WorkerJobsPage() {
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
-            AI Insights
+            <span suppressHydrationWarning>{t('worker.jobs.aiInsights')}</span>
           </h2>
           <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
             {aiInsights.map((insight) => (
               <Card key={insight.title} className={insight.color}>
                 <CardContent className="pt-6">
-                  <p className="font-semibold mb-1">{insight.title}</p>
-                  <p className="text-sm opacity-90">{insight.desc}</p>
+                  <p className="font-semibold mb-1" suppressHydrationWarning>{insight.title}</p>
+                  <p className="text-sm opacity-90" suppressHydrationWarning>{insight.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -451,20 +454,20 @@ export default function WorkerJobsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Brain className="h-4 w-4 text-primary" />
-              AI Skill Gap Analyzer
+              <span suppressHydrationWarning>{t('worker.jobs.skillGapTitle')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {missingSkills.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No immediate skill gaps detected from your top matches. Keep your profile updated for better accuracy.
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {t('worker.jobs.skillGapNone')}
               </p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {missingSkills.map(({ skill, count }) => (
                   <Badge key={skill} variant="secondary" className="gap-1">
                     <Target className="h-3 w-3" />
-                    {skill} <span className="text-xs opacity-80">({count} jobs)</span>
+                    <span suppressHydrationWarning>{skill} <span className="text-xs opacity-80">({count} {t('worker.jobs.skillGapJobs')})</span></span>
                   </Badge>
                 ))}
               </div>
@@ -478,7 +481,7 @@ export default function WorkerJobsPage() {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search jobs by title, skills, or description..."
+                  placeholder={t('worker.jobs.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -491,7 +494,7 @@ export default function WorkerJobsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="all" suppressHydrationWarning>{t('worker.jobs.allCategories')}</SelectItem>
                       {uniqueCategories.map((category) => (
                         <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
@@ -504,36 +507,36 @@ export default function WorkerJobsPage() {
                     if (latLng) setSearchCoords(latLng)
                     else if (!value) setSearchCoords(null)
                   }}
-                  placeholder="Filter by location"
+                  placeholder={t('worker.jobs.locationPlaceholder')}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Select value={experienceFilter} onValueChange={setExperienceFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Experience Level" />
+                    <SelectValue placeholder={t('worker.jobs.experienceLevel')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Experience</SelectItem>
-                    <SelectItem value="entry">Entry Level</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="expert">Expert</SelectItem>
+                    <SelectItem value="all" suppressHydrationWarning>{t('worker.jobs.allExperience')}</SelectItem>
+                    <SelectItem value="entry" suppressHydrationWarning>{t('worker.jobs.entry')}</SelectItem>
+                    <SelectItem value="intermediate" suppressHydrationWarning>{t('worker.jobs.intermediate')}</SelectItem>
+                    <SelectItem value="expert" suppressHydrationWarning>{t('worker.jobs.expert')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={jobModeFilter} onValueChange={setJobModeFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Work Mode" />
+                    <SelectValue placeholder={t('worker.jobs.workMode')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Modes</SelectItem>
-                    <SelectItem value="local">On-site</SelectItem>
-                    <SelectItem value="remote">Remote</SelectItem>
+                    <SelectItem value="all" suppressHydrationWarning>{t('worker.jobs.allModes')}</SelectItem>
+                    <SelectItem value="local" suppressHydrationWarning>{t('worker.jobs.onsite')}</SelectItem>
+                    <SelectItem value="remote" suppressHydrationWarning>{t('worker.jobs.remote')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Pay Range (₹)</label>
-                  <span className="text-sm text-muted-foreground">₹{payRange[0].toLocaleString('en-IN')} – ₹{payRange[1].toLocaleString('en-IN')}</span>
+                  <label className="text-sm font-medium" suppressHydrationWarning>{t('worker.jobs.payRange')}</label>
+                  <span className="text-sm text-muted-foreground" suppressHydrationWarning>₹{payRange[0].toLocaleString('en-IN')} – ₹{payRange[1].toLocaleString('en-IN')}</span>
                 </div>
                 <Slider
                   min={0}
@@ -552,16 +555,16 @@ export default function WorkerJobsPage() {
           <TabsList className="w-full flex-wrap">
             <TabsTrigger value="recommended" className="gap-2 flex-1 min-w-[140px]">
               <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Recommended</span><span className="sm:hidden">AI Match</span> ({topFiveMatches.length})
+              <span className="hidden sm:inline" suppressHydrationWarning>{t('worker.jobs.recommended')}</span><span className="sm:hidden" suppressHydrationWarning>{t('worker.jobs.aiMatch')}</span> <span suppressHydrationWarning>({topFiveMatches.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="all" className="flex-1 min-w-[100px]">
-              All Jobs ({filteredJobs.length})
+            <TabsTrigger value="all" className="flex-1 min-w-[100px]" suppressHydrationWarning>
+              {t('worker.jobs.allJobs')} ({filteredJobs.length})
             </TabsTrigger>
           </TabsList>
           {activeCoords && (
             <div className="flex items-center gap-1.5 mt-2 mb-4 text-xs text-blue-600 dark:text-blue-400">
               <Route className="h-3.5 w-3.5" />
-              <span>Sorted by distance from selected location</span>
+              <span suppressHydrationWarning>{t('worker.jobs.sortedByDistance')}</span>
             </div>
           )}
           {!activeCoords && (
@@ -573,18 +576,18 @@ export default function WorkerJobsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Strong Matches Yet</h3>
+                  <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.jobs.noStrongMatches')}</h3>
                   {isProfileReady ? (
-                    <p className="text-muted-foreground mb-4">
-                      Your profile is complete. We will show top matches as more relevant jobs are posted.
+                    <p className="text-muted-foreground mb-4" suppressHydrationWarning>
+                      {t('worker.jobs.profileComplete')}
                     </p>
                   ) : (
                     <>
-                      <p className="text-muted-foreground mb-4">
-                        Complete your profile with skills and experience to get personalized job recommendations
+                      <p className="text-muted-foreground mb-4" suppressHydrationWarning>
+                        {t('worker.jobs.completeProfilePrompt')}
                       </p>
-                      <Button onClick={() => router.push('/worker/profile')}>
-                        Complete Profile
+                      <Button onClick={() => router.push('/worker/profile')} suppressHydrationWarning>
+                        {t('worker.jobs.completeProfile')}
                       </Button>
                     </>
                   )}
@@ -604,9 +607,9 @@ export default function WorkerJobsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
-                  <p className="text-muted-foreground">
-                    Try adjusting your search filters
+                  <h3 className="text-lg font-semibold mb-2" suppressHydrationWarning>{t('worker.jobs.noJobsFound')}</h3>
+                  <p className="text-muted-foreground" suppressHydrationWarning>
+                    {t('worker.jobs.adjustFilters')}
                   </p>
                 </CardContent>
               </Card>

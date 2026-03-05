@@ -131,26 +131,11 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">13. Platform Role, User Safety &amp; Security</h2>
-            <p className="mb-3">HyperLocal Jobs is an <strong>intermediary platform</strong> whose sole role is to connect Workers and Employers. We do not employ Workers, supervise job execution, or guarantee the accuracy of any user-submitted information. Accordingly:</p>
-            <ul className="list-disc pl-5 space-y-2">
-              <li><strong>User responsibility:</strong> Each User is solely responsible for verifying the identity, credentials, and suitability of the other party before entering into any work arrangement. Workers should exercise personal judgment before accepting a job, and Employers should independently assess any Worker&apos;s qualifications and conduct appropriate background checks where required by their business.</li>
-              <li><strong>No guarantee of authenticity:</strong> While we take steps to reduce fraudulent accounts, we cannot guarantee the authenticity of every profile, job listing, or user-submitted document. Users are advised to exercise due diligence and report suspicious activity using the in-Platform reporting tools.</li>
-              <li><strong>Safety precautions:</strong> Users meet and interact at their own risk. Workers are encouraged to inform a trusted person before attending an in-person job; Employers are encouraged to conduct interviews in professional or public settings.</li>
-            </ul>
-            <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
-              <p className="text-emerald-800 dark:text-emerald-300 font-medium mb-1">Our Multi-Layer Security Measures</p>
-              <p className="text-emerald-700 dark:text-emerald-400 text-xs leading-relaxed">To build a trustworthy environment, HyperLocal Jobs provides the following safeguards:</p>
-              <ul className="list-disc pl-5 space-y-1 mt-2 text-xs text-emerald-700 dark:text-emerald-400">
-                <li><strong>PAN-based identity verification</strong> &mdash; Employers and Workers can verify their identity via PAN card, earning a visible Verified badge on their profile.</li>
-                <li><strong>Trust Score system</strong> &mdash; Each user has a dynamically calculated Trust Score based on job completion rate, ratings, account age, and verification status, giving both parties a transparent reliability signal.</li>
-                <li><strong>Escrow-protected payments</strong> &mdash; Funds are held securely in escrow and released only after work completion, protecting both parties from payment fraud.</li>
-                <li><strong>AI-powered fraud detection</strong> &mdash; Job listings are automatically scanned for suspicious patterns (e.g. advance fee requests, misleading descriptions) and flagged for review.</li>
-                <li><strong>In-platform communication</strong> &mdash; Direct contact details are not shared until both parties connect, reducing unsolicited contact and scam risk.</li>
-                <li><strong>Mutual review system</strong> &mdash; Post-job ratings create accountability and help future users make informed decisions.</li>
-              </ul>
-              <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400 italic">These measures significantly reduce risk, but cannot eliminate it entirely. Users are encouraged to use them and report any concerns promptly.</p>
-            </div>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">13. Platform Intermediary Disclaimer &amp; Safe-Harbour</h2>
+            <p className="mb-3">By using this Platform, you acknowledge and agree that HyperLocal Jobs acts solely as a digital intermediary that enables Workers and Managers (Employers) to connect virtually.</p>
+            <p className="mb-3">Submission of an application or profile does not guarantee employment, hiring, or job allocation by any Manager. All recruitment decisions are made exclusively by the Manager, and the Platform has no involvement in such decisions.</p>
+            <p className="mb-3">Any disputes, conflicts, payments, or employment-related issues arising between a Worker and a Manager shall be resolved directly between those parties, and the Platform shall bear no responsibility or liability for such matters. The Platform only facilitates communication and networking between users and does not act as an employer, contractor, or mediator.</p>
+            <p>This condition is protected under <strong>Section 79 of the Information Technology Act, 2000</strong>, which grants safe-harbour protection to intermediaries, stating that an intermediary is not liable for third-party information, communication, or interactions hosted on its platform when it merely provides access to a communication system without controlling the transaction.</p>
           </section>
 
           <section>

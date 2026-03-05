@@ -59,7 +59,7 @@ interface AssessmentState {
 
 export default function SkillGapPage() {
   const { user, loading: authLoading } = useAuth()
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const router = useRouter()
 
   const [profile, setProfile] = useState<WorkerProfile | null>(null)
@@ -317,16 +317,16 @@ export default function SkillGapPage() {
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
                 <ClipboardCheck className="h-5 w-5 text-primary" />
-                {assessment.skill} Assessment
+                {assessment.skill} {t('skillGap.assessmentTitle')}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {submitted ? 'Results' : `Question ${currentQ + 1} of ${totalQ}`}
+                {submitted ? t('skillGap.results') : `${t('skillGap.questionOf')} ${currentQ + 1} ${t('skillGap.of')} ${totalQ}`}
                 {' · '}
                 <Badge variant="outline" className="text-xs ml-1">{assessment.difficulty}</Badge>
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={closeAssessment}>
-              {submitted ? 'Back to Skills' : 'Cancel'}
+              {submitted ? t('skillGap.backToSkills') : t('common.cancel')}
             </Button>
           </div>
 
@@ -340,25 +340,25 @@ export default function SkillGapPage() {
                     <div className="h-20 w-20 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mx-auto">
                       <Trophy className="h-10 w-10 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-green-700 dark:text-green-400">Assessment Passed!</h2>
+                    <h2 className="text-2xl font-bold text-green-700 dark:text-green-400">{t('skillGap.assessmentPassed')}</h2>
                     <p className="text-lg font-semibold">{score} / {totalQ} correct</p>
                     <div className="bg-green-100 dark:bg-green-900/50 rounded-lg p-4 max-w-md mx-auto space-y-2">
                       <p className="flex items-center gap-2 text-sm text-green-800 dark:text-green-300">
                         <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        <strong>{assessment.skill}</strong> added to your profile
+                        <strong>{assessment.skill}</strong> {t('skillGap.skillAdded')}
                       </p>
                       <p className="flex items-center gap-2 text-sm text-green-800 dark:text-green-300">
                         <Star className="h-4 w-4 shrink-0" />
-                        Trust score boosted +2 points
+                        {t('skillGap.trustBoosted')}
                       </p>
                       <p className="flex items-center gap-2 text-sm text-green-800 dark:text-green-300">
                         <Award className="h-4 w-4 shrink-0" />
-                        Rating increased by +0.1
+                        {t('skillGap.ratingBoosted')}
                       </p>
                     </div>
                     {profileUpdating && (
                       <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-                        <Loader2 className="h-3 w-3 animate-spin" /> Updating your profile...
+                        <Loader2 className="h-3 w-3 animate-spin" /> {t('skillGap.updatingProfile')}
                       </p>
                     )}
                   </>
@@ -367,16 +367,16 @@ export default function SkillGapPage() {
                     <div className="h-20 w-20 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mx-auto">
                       <XCircle className="h-10 w-10 text-red-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-red-700 dark:text-red-400">Keep Learning!</h2>
+                    <h2 className="text-2xl font-bold text-red-700 dark:text-red-400">{t('skillGap.keepLearning')}</h2>
                     <p className="text-lg font-semibold">{score} / {totalQ} correct</p>
                     <p className="text-sm text-muted-foreground">
-                      You need at least {assessment.passingScore} correct answers to pass. Review the resources below and try again!
+                      {t('skillGap.needMoreCorrect')} {assessment.passingScore} {t('skillGap.correctAnswers')}
                     </p>
                   </>
                 )}
 
                 <div className="text-left space-y-4 mt-6 max-w-lg mx-auto">
-                  <h3 className="font-semibold text-sm text-muted-foreground">Review Answers</h3>
+                  <h3 className="font-semibold text-sm text-muted-foreground">{t('skillGap.reviewAnswers')}</h3>
                   {assessment.questions.map((rq, qi) => {
                     const userAns = answers[qi]
                     const isCorrect = userAns === rq.correctIndex
@@ -404,10 +404,10 @@ export default function SkillGapPage() {
                 </div>
 
                 <div className="flex gap-3 justify-center mt-6">
-                  <Button variant="outline" onClick={closeAssessment}>Back to Skills</Button>
+                  <Button variant="outline" onClick={closeAssessment}>{t('skillGap.backToSkills')}</Button>
                   {!passed && (
                     <Button onClick={() => startAssessment(assessment.skill)}>
-                      <RefreshCw className="h-4 w-4 mr-2" /> Retake Assessment
+                      <RefreshCw className="h-4 w-4 mr-2" /> {t('skillGap.retakeAssessment')}
                     </Button>
                   )}
                 </div>
@@ -417,7 +417,7 @@ export default function SkillGapPage() {
             <Card>
               <CardContent className="pt-6 space-y-6">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Question {currentQ + 1} of {totalQ}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{t('skillGap.questionOf')} {currentQ + 1} {t('skillGap.of')} {totalQ}</p>
                   <h3 className="text-lg font-semibold leading-snug">{q.question}</h3>
                 </div>
                 <div className="space-y-3">
@@ -446,16 +446,16 @@ export default function SkillGapPage() {
                 </div>
                 <div className="flex items-center justify-between pt-2">
                   <Button variant="outline" size="sm" disabled={currentQ === 0} onClick={() => setActiveAssessment((p) => p ? { ...p, currentQ: p.currentQ - 1 } : p)}>
-                    Previous
+                    {t('skillGap.previous')}
                   </Button>
-                  <p className="text-xs text-muted-foreground">{answeredCount}/{totalQ} answered</p>
+                  <p className="text-xs text-muted-foreground">{answeredCount}/{totalQ} {t('skillGap.answered')}</p>
                   {currentQ < totalQ - 1 ? (
                     <Button size="sm" onClick={() => setActiveAssessment((p) => p ? { ...p, currentQ: p.currentQ + 1 } : p)}>
-                      Next <ChevronRight className="h-4 w-4 ml-1" />
+                      {t('skillGap.next')} <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   ) : (
                     <Button size="sm" disabled={answeredCount < totalQ} onClick={submitAssessment} className="bg-green-600 hover:bg-green-700">
-                      <ClipboardCheck className="h-4 w-4 mr-1" /> Submit
+                      <ClipboardCheck className="h-4 w-4 mr-1" /> {t('skillGap.submit')}
                     </Button>
                   )}
                 </div>
@@ -476,10 +476,10 @@ export default function SkillGapPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Target className="h-6 w-6 text-primary" />
-              AI Skill Gap Analyzer
+              {t('skillGap.title')}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Compare your skills against what employers are looking for
+              {t('skillGap.subtitle')}
             </p>
           </div>
           <Button
@@ -488,7 +488,7 @@ export default function SkillGapPage() {
             className="gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${analyzing ? 'animate-spin' : ''}`} />
-            {analyzing ? 'Analyzing...' : 'Re-analyze'}
+            {analyzing ? t('skillGap.analyzing') : t('skillGap.reAnalyze')}
           </Button>
         </div>
 
@@ -506,12 +506,12 @@ export default function SkillGapPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
-              <h3 className="text-lg font-semibold mb-2">Complete Your Profile First</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('skillGap.noProfile')}</h3>
               <p className="text-muted-foreground mb-4">
-                Add your skills to your profile so we can analyze your strengths and gaps.
+                {t('skillGap.noProfileDesc')}
               </p>
               <Button onClick={() => router.push('/worker/profile')}>
-                <ArrowRight className="h-4 w-4 mr-2" /> Go to Profile
+                <ArrowRight className="h-4 w-4 mr-2" /> {t('skillGap.goToProfile')}
               </Button>
             </CardContent>
           </Card>
@@ -522,7 +522,7 @@ export default function SkillGapPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm text-muted-foreground">Market Readiness</p>
+                    <p className="text-sm text-muted-foreground">{t('skillGap.marketReadiness')}</p>
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <TrendingUp className="h-5 w-5 text-primary" />
                     </div>
@@ -531,7 +531,7 @@ export default function SkillGapPage() {
                     {matchPct}%
                     {passedCount > 0 && (
                       <span className="ml-2 text-sm font-normal text-green-600">
-                        +{passedCount} assessed
+                        +{passedCount} {t('skillGap.assessed')}
                       </span>
                     )}
                   </div>
@@ -542,14 +542,14 @@ export default function SkillGapPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm text-muted-foreground">Strong Skills</p>
+                    <p className="text-sm text-muted-foreground">{t('skillGap.strongSkills')}</p>
                     <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                       <CheckCircle2 className="h-5 w-5 text-green-600" />
                     </div>
                   </div>
                   <div className="text-3xl font-bold">{analysis.strongSkills.length + passedCount}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    In-demand skills you have{passedCount > 0 ? ` (+${passedCount} assessed)` : ''}
+                    {t('skillGap.inDemandDesc')}{passedCount > 0 ? ` (+${passedCount} ${t('skillGap.assessed')})` : ''}
                   </p>
                 </CardContent>
               </Card>
@@ -557,13 +557,13 @@ export default function SkillGapPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm text-muted-foreground">Skill Gaps</p>
+                    <p className="text-sm text-muted-foreground">{t('skillGap.skillGaps')}</p>
                     <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
                       <AlertTriangle className="h-5 w-5 text-orange-600" />
                     </div>
                   </div>
                   <div className="text-3xl font-bold">{Math.max(0, analysis.gapSkills.length - passedCount)}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Skills to learn for more jobs</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('skillGap.skillsToLearnDesc')}</p>
                 </CardContent>
               </Card>
             </div>
@@ -574,7 +574,7 @@ export default function SkillGapPage() {
                 <div className="flex items-start gap-3">
                   <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium mb-1">AI Assessment</p>
+                    <p className="font-medium mb-1">{t('skillGap.aiAssessment')}</p>
                     <p className="text-sm text-muted-foreground">{analysis.summary}</p>
                   </div>
                 </div>
@@ -587,9 +587,9 @@ export default function SkillGapPage() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    Your Strong Skills
+                    {t('skillGap.yourStrongSkills')}
                   </CardTitle>
-                  <CardDescription>These skills are in high demand — you&apos;re already competitive here</CardDescription>
+                  <CardDescription>{t('skillGap.strongSkillsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
@@ -610,9 +610,9 @@ export default function SkillGapPage() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-orange-600" />
-                    Skills to Learn
+                    {t('skillGap.skillsToLearn')}
                   </CardTitle>
-                  <CardDescription>Learning these skills can unlock more job opportunities</CardDescription>
+                  <CardDescription>{t('skillGap.skillsToLearnCardDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -643,9 +643,9 @@ export default function SkillGapPage() {
                     <div>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <GraduationCap className="h-5 w-5 text-blue-600" />
-                        AI Learning Plan
+                        {t('skillGap.learningPlan')}
                       </CardTitle>
-                      <CardDescription>Personalized resources to close your skill gaps</CardDescription>
+                      <CardDescription>{t('skillGap.learningPlanDesc')}</CardDescription>
                     </div>
                     {learningPlan && (
                       <div className="text-right">
@@ -657,9 +657,9 @@ export default function SkillGapPage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">Readiness</p>
+                        <p className="text-xs text-muted-foreground">{t('skillGap.readiness')}</p>
                         {passedCount > 0 && (
-                          <p className="text-[10px] text-green-600 mt-0.5">{passedCount} skill{passedCount > 1 ? 's' : ''} assessed</p>
+                          <p className="text-[10px] text-green-600 mt-0.5">{passedCount} {passedCount > 1 ? t('skillGap.skillsAssessedPlural') : t('skillGap.skillsAssessed')}</p>
                         )}
                       </div>
                     )}
@@ -669,7 +669,7 @@ export default function SkillGapPage() {
                   {loadingPlan ? (
                     <div className="flex items-center justify-center py-8 gap-3">
                       <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                      <p className="text-sm text-muted-foreground">Generating personalized learning plan...</p>
+                      <p className="text-sm text-muted-foreground">{t('skillGap.generatingPlan')}</p>
                     </div>
                   ) : learningPlan ? (
                     <>
@@ -678,7 +678,7 @@ export default function SkillGapPage() {
                         <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4">
                           <h4 className="font-medium flex items-center gap-2 mb-3">
                             <Zap className="h-4 w-4 text-blue-600" />
-                            Quick Wins — Do These Today
+                            {t('skillGap.quickWins')}
                           </h4>
                           <ul className="space-y-2">
                             {learningPlan.quickWins.map((win, i) => (
@@ -703,7 +703,7 @@ export default function SkillGapPage() {
                               <div className="flex items-center gap-2">
                                 {completedAssessments.get(lr.skill.toLowerCase())?.passed && (
                                   <Badge className="bg-green-100 text-green-700 text-[10px]">
-                                    <Trophy className="h-3 w-3 mr-1" /> Assessed
+                                    <Trophy className="h-3 w-3 mr-1" /> {t('skillGap.assessedBadge')}
                                   </Badge>
                                 )}
                                 <Badge variant="outline" className="text-xs">
@@ -754,8 +754,8 @@ export default function SkillGapPage() {
                             {!completedAssessments.get(lr.skill.toLowerCase())?.passed && (
                               <Button size="sm" variant="outline" className="mt-3 w-full border-dashed" disabled={assessmentLoading === lr.skill} onClick={() => startAssessment(lr.skill)}>
                                 {assessmentLoading === lr.skill
-                                  ? <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Generating Quiz...</>
-                                  : <><ClipboardCheck className="h-3 w-3 mr-1" /> Take Assessment for {lr.skill}</>}
+                                  ? <><Loader2 className="h-3 w-3 animate-spin mr-1" /> {t('skillGap.generatingQuiz')}</>
+                                  : <><ClipboardCheck className="h-3 w-3 mr-1" /> {t('skillGap.takeAssessmentFor')} {lr.skill}</>}
                               </Button>
                             )}
                           </div>
@@ -766,7 +766,7 @@ export default function SkillGapPage() {
                         <div>
                           <h4 className="font-medium text-sm text-muted-foreground mb-3 flex items-center gap-2">
                             <TrendingUp className="h-4 w-4" />
-                            Level Up Your Existing Skills
+                            {t('skillGap.levelUp')}
                           </h4>
                           <div className="grid sm:grid-cols-2 gap-3">
                             {learningPlan.resources
@@ -800,7 +800,7 @@ export default function SkillGapPage() {
                         <div className="bg-gradient-to-r from-primary/5 to-blue-50 dark:from-primary/10 dark:to-blue-950/30 rounded-lg p-4">
                           <h4 className="font-medium flex items-center gap-2 mb-2">
                             <TrendingUp className="h-4 w-4 text-primary" />
-                            Your Career Growth Path
+                            {t('skillGap.careerPath')}
                           </h4>
                           <p className="text-sm text-muted-foreground">{learningPlan.careerPath}</p>
                         </div>
@@ -817,10 +817,10 @@ export default function SkillGapPage() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <ClipboardCheck className="h-5 w-5 text-purple-600" />
-                    Skill Assessments
+                    {t('skillGap.skillAssessments')}
                   </CardTitle>
                   <CardDescription>
-                    Studied the resources above? Now take an AI-generated quiz to prove your skills. Pass to add them to your profile and boost your rating!
+                    {t('skillGap.skillAssessmentsDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -843,16 +843,16 @@ export default function SkillGapPage() {
                             </p>
                             {completed && (
                               <p className={`text-xs mt-1 ${completed.passed ? 'text-green-600' : 'text-red-500'}`}>
-                                {completed.passed ? '✓ Passed' : '✗ Failed'} — {completed.score}/{completed.total} correct
+                                {completed.passed ? t('skillGap.passedLabel') : t('skillGap.failedLabel')} — {completed.score}/{completed.total} {t('skillGap.correct')}
                               </p>
                             )}
                           </div>
                           <Button size="sm" variant={completed?.passed ? 'outline' : 'default'} disabled={isLoading} onClick={() => startAssessment(skill)}
                             className={`shrink-0 ${completed?.passed ? 'border-green-300 text-green-700' : ''}`}>
-                            {isLoading ? <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Loading...</>
-                             : completed?.passed ? <><Award className="h-3 w-3 mr-1" /> Retake</>
-                             : completed ? <><RefreshCw className="h-3 w-3 mr-1" /> Retry</>
-                             : <><ClipboardCheck className="h-3 w-3 mr-1" /> Take Quiz</>}
+                            {isLoading ? <><Loader2 className="h-3 w-3 animate-spin mr-1" /> {t('skillGap.loading')}</>
+                             : completed?.passed ? <><Award className="h-3 w-3 mr-1" /> {t('skillGap.retake')}</>
+                             : completed ? <><RefreshCw className="h-3 w-3 mr-1" /> {t('skillGap.retry')}</>
+                             : <><ClipboardCheck className="h-3 w-3 mr-1" /> {t('skillGap.takeQuiz')}</>}
                           </Button>
                         </div>
                       )
@@ -865,8 +865,8 @@ export default function SkillGapPage() {
             {/* Top Demanded Skills overview */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Top In-Demand Skills</CardTitle>
-                <CardDescription>Most requested skills across {demandedSkills.length} active job categories</CardDescription>
+                <CardTitle className="text-lg">{t('skillGap.topDemanded')}</CardTitle>
+                <CardDescription>{t('skillGap.topDemandedDesc')} {demandedSkills.length} {t('skillGap.topDemandedDesc2')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">

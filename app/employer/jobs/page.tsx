@@ -13,6 +13,7 @@ import { Briefcase, MapPin, Clock, IndianRupee, Users, Plus, Eye, Edit, Trash2, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useI18n } from '@/contexts/I18nContext'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +29,7 @@ export default function EmployerJobsPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
+  const { t } = useI18n()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [pendingDeleteJobId, setPendingDeleteJobId] = useState<string | null>(null)
@@ -41,7 +43,7 @@ export default function EmployerJobsPage() {
         const employerJobs = await jobOps.findByEmployerId(user!.id)
         if (!cancelled) setJobs(employerJobs)
       } catch {
-        toast({ title: 'Error', description: 'Failed to load jobs', variant: 'destructive' })
+        toast({ title: t('common.error'), description: t('employer.jobs.toast.loadFailed'), variant: 'destructive' })
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -56,11 +58,11 @@ export default function EmployerJobsPage() {
       await jobOps.delete(jobId)
       // Remove locally instead of full re-fetch
       setJobs((prev) => prev.filter((j) => j.id !== jobId))
-      toast({ title: 'Success', description: 'Job deleted successfully' })
+      toast({ title: t('common.success'), description: t('employer.jobs.toast.deleteSuccess') })
     } catch {
-      toast({ title: 'Error', description: 'Failed to delete job', variant: 'destructive' })
+      toast({ title: t('common.error'), description: t('employer.jobs.toast.deleteFailed'), variant: 'destructive' })
     }
-  }, [toast])
+  }, [t, toast])
 
   // Memoized status-filtered arrays
   const draftJobs = useMemo(() => jobs.filter((j) => j.status === 'draft'), [jobs])
@@ -82,7 +84,7 @@ export default function EmployerJobsPage() {
                   <Badge key={skill} variant="secondary">{skill}</Badge>
                 ))}
                 {job.requiredSkills.length > 3 && (
-                  <Badge variant="secondary">+{job.requiredSkills.length - 3} more</Badge>
+                  <Badge variant="secondary">+{job.requiredSkills.length - 3} {t('common.more')}</Badge>
                 )}
               </div>
             </div>
@@ -93,16 +95,16 @@ export default function EmployerJobsPage() {
                 job.status === 'completed' ? 'outline' :
                 'destructive'
               }>
-                {job.status === 'draft' ? '? Pending Payment' : job.status}
+                {job.status === 'draft' ? t('employer.jobs.status.pendingPayment') : t(`status.${job.status}`)}
               </Badge>
               {job.status !== 'draft' && (
                 <span className="text-xs flex items-center gap-1">
                   {job.escrowRequired === false ? (
-                    <><AlertCircle className="w-3 h-3 text-slate-400" /><span className="text-slate-500">No Escrow</span></>
+                    <><AlertCircle className="w-3 h-3 text-slate-400" /><span className="text-slate-500">{t('employer.jobs.noEscrow')}</span></>
                   ) : job.paymentStatus === 'locked' ? (
-                    <><Lock className="w-3 h-3 text-green-500" /><span className="text-green-600">Escrow Secured</span></>
+                    <><Lock className="w-3 h-3 text-green-500" /><span className="text-green-600">{t('employer.jobs.escrowSecured')}</span></>
                   ) : (
-                    <><AlertCircle className="w-3 h-3 text-amber-500" /><span className="text-amber-600">Escrow Pending</span></>
+                    <><AlertCircle className="w-3 h-3 text-amber-500" /><span className="text-amber-600">{t('employer.jobs.escrowPending')}</span></>
                   )}
                 </span>
               )}
@@ -119,7 +121,7 @@ export default function EmployerJobsPage() {
             </div>
             <div className="flex items-center gap-2 text-sm">
               <IndianRupee className="h-4 w-4 text-muted-foreground" />
-              <span>₹{job.payAmount}/{job.payType === 'hourly' ? 'hr' : 'fixed'}</span>
+              <span>₹{job.payAmount}/{job.payType === 'hourly' ? t('common.hourShort') : t('common.fixed')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -127,7 +129,7 @@ export default function EmployerJobsPage() {
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span>{applicationsCount} applications</span>
+              <span>{applicationsCount} {t('employer.jobs.applications')}</span>
             </div>
           </div>
 
@@ -139,8 +141,8 @@ export default function EmployerJobsPage() {
                 onClick={() => router.push(`/employer/payment/${job.id}`)}
               >
                 <Lock className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Complete Payment to Go Live</span>
-                <span className="sm:hidden">Complete Payment</span>
+                <span className="hidden sm:inline">{t('employer.jobs.completePaymentGoLive')}</span>
+                <span className="sm:hidden">{t('employer.jobs.completePayment')}</span>
               </Button>
             ) : (
               <Button
@@ -150,7 +152,7 @@ export default function EmployerJobsPage() {
                 onClick={() => router.push(`/employer/jobs/${job.id}`)}
               >
                 <Eye className="h-4 w-4 mr-2" />
-                View Details
+                {t('common.viewDetails')}
               </Button>
             )}
             {job.status === 'active' && (
@@ -235,12 +237,12 @@ export default function EmployerJobsPage() {
       <main className="container mx-auto px-4 py-8 pb-28 md:pb-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">My Jobs</h1>
-            <p className="text-muted-foreground">Manage your job postings and applications</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('employer.jobs.title')}</h1>
+            <p className="text-muted-foreground">{t('employer.jobs.subtitle')}</p>
           </div>
           <Button onClick={() => router.push('/employer/jobs/post')}>
             <Plus className="h-4 w-4 mr-2" />
-            Post New Job
+            {t('employer.jobs.postNew')}
           </Button>
         </div>
 
@@ -248,20 +250,20 @@ export default function EmployerJobsPage() {
           <TabsList className="mb-6">
             {draftJobs.length > 0 && (
               <TabsTrigger value="draft" className="relative">
-                Pending Payment
+                {t('employer.jobs.tab.pendingPayment')}
                 <span className="ml-1.5 bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {draftJobs.length}
                 </span>
               </TabsTrigger>
             )}
             <TabsTrigger value="active">
-              Active ({activeJobs.length})
+              {t('status.active')} ({activeJobs.length})
             </TabsTrigger>
             <TabsTrigger value="completed">
-              Completed ({completedJobs.length})
+              {t('status.completed')} ({completedJobs.length})
             </TabsTrigger>
             <TabsTrigger value="cancelled">
-              Cancelled ({cancelledJobs.length})
+              {t('status.cancelled')} ({cancelledJobs.length})
             </TabsTrigger>
           </TabsList>
 
@@ -269,7 +271,7 @@ export default function EmployerJobsPage() {
             <TabsContent value="draft">
               <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                These jobs are not visible to workers until you complete the escrow payment.
+                {t('employer.jobs.pendingNote')}
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 {draftJobs.map((job) => (
@@ -284,11 +286,11 @@ export default function EmployerJobsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Active Jobs</h3>
-                  <p className="text-muted-foreground mb-4">Post your first job to get started</p>
+                  <h3 className="text-lg font-semibold mb-2">{t('employer.jobs.noActive')}</h3>
+                  <p className="text-muted-foreground mb-4">{t('employer.jobs.noActiveDesc')}</p>
                   <Button onClick={() => router.push('/employer/jobs/post')}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Post a Job
+                    {t('employer.jobs.postJob')}
                   </Button>
                 </CardContent>
               </Card>
@@ -305,7 +307,7 @@ export default function EmployerJobsPage() {
             {completedJobs.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No completed jobs yet</p>
+                  <p className="text-muted-foreground">{t('employer.jobs.noCompleted')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -321,7 +323,7 @@ export default function EmployerJobsPage() {
             {cancelledJobs.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No cancelled jobs</p>
+                  <p className="text-muted-foreground">{t('employer.jobs.noCancelled')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -338,13 +340,13 @@ export default function EmployerJobsPage() {
       <AlertDialog open={!!pendingDeleteJobId} onOpenChange={(open) => !open && setPendingDeleteJobId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+            <AlertDialogTitle>{t('employer.jobs.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The job and related listing visibility will be removed.
+              {t('employer.jobs.deleteDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (pendingDeleteJobId) {
@@ -353,7 +355,7 @@ export default function EmployerJobsPage() {
                 setPendingDeleteJobId(null)
               }}
             >
-              Delete Job
+              {t('employer.jobs.deleteAction')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
