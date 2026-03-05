@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
   try {
     // ── Parse request body (handle both JSON and FormData) ──────────────
     let workerId: string, skill: string, question: unknown, expectedAnswer: string
-    let videoBase64: string, videoDurationMs: number, audioMetrics: unknown
+    let videoBase64: string, videoDurationMs: number, audioMetrics: unknown, faceMetrics: unknown
     let language = 'en'  // worker's chosen UI language — passed to Whisper as hint
     let videoRaw: { buffer: Buffer; mimeType: string } | null = null
 
@@ -107,6 +107,8 @@ export async function POST(req: NextRequest) {
       videoDurationMs = Number(form.get('videoDurationMs') || 0)
       const metricsRaw = form.get('audioMetrics') as string || 'null'
       try { audioMetrics = JSON.parse(metricsRaw) } catch { audioMetrics = null }
+      const faceRaw = form.get('faceMetrics') as string || 'null'
+      try { faceMetrics = JSON.parse(faceRaw) } catch { faceMetrics = null }
 
       // Convert File/Blob to raw buffer for efficient upload
       const videoFile = form.get('video') as File | null
@@ -140,6 +142,7 @@ export async function POST(req: NextRequest) {
       videoBase64 = body.videoBase64 as string
       videoDurationMs = (body.videoDurationMs as number) || 0
       audioMetrics = body.audioMetrics
+      faceMetrics = body.faceMetrics ?? null
     }
 
     if (!workerId || !skill || !question || !videoBase64) {
@@ -197,7 +200,7 @@ export async function POST(req: NextRequest) {
         const analysisRes = await fetch(analysisUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ assessmentId, videoUrl, skill, expectedAnswer, audioMetrics, question, language }),
+          body: JSON.stringify({ assessmentId, videoUrl, skill, expectedAnswer, audioMetrics, faceMetrics, question, language }),
           signal: AbortSignal.timeout(55_000), // stay within 60s maxDuration
         })
 

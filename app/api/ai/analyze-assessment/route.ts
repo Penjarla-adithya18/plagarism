@@ -293,7 +293,7 @@ async function deleteStorageFile(fileUrl: string): Promise<void> {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { assessmentId, videoUrl, skill, expectedAnswer, audioMetrics, question, language } = body
+    const { assessmentId, videoUrl, skill, expectedAnswer, audioMetrics, question, language, faceMetrics } = body
     // Worker's chosen UI language (en/hi/te) — used as Whisper language hint
     const whisperLang: string | undefined = typeof language === 'string' && language !== 'en' ? language : undefined
 
@@ -302,6 +302,20 @@ export async function POST(req: NextRequest) {
     // ── Step 1: Analyze client-side audio metrics ───────────────────────────
     const audioAnalysis = analyzeAudioMetrics(audioMetrics as AudioMetrics | null)
     console.log(`[analyze-assessment] Step 1 ✓ Audio metrics — score=${audioAnalysis.score}, flags=${audioAnalysis.flags.length}`)
+
+    // ── Step 1b: Eye contact scoring ───────────────────────────────────────
+    const faceMet = faceMetrics as { eyeContactPercent?: number; framesChecked?: number } | null
+    if (faceMet && typeof faceMet.eyeContactPercent === 'number' && (faceMet.framesChecked ?? 0) >= 10) {
+      const eyePct = faceMet.eyeContactPercent
+      if (eyePct < 40) {
+        audioAnalysis.flags.push(`Eye contact only ${eyePct}% — worker frequently looking away (possible reading from screen/phone)`)
+        audioAnalysis.score = Math.max(0, audioAnalysis.score - 30)
+      } else if (eyePct < 65) {
+        audioAnalysis.flags.push(`Eye contact ${eyePct}% — worker not consistently facing the camera`)
+        audioAnalysis.score = Math.max(0, audioAnalysis.score - 15)
+      }
+      console.log(`[analyze-assessment] Step 1b ✓ Eye contact: ${eyePct}% (${faceMet.framesChecked} frames)`)
+    }
 
     // ── Step 2: Download video & transcribe with Whisper ────────────────────
     let transcribedText = ''
@@ -428,8 +442,10 @@ Return ONLY valid JSON (no markdown):
       (
         // Explicitly not original OR
         !originalityCheck.is_original ||
-        // Non-natural speech pattern with reasonable confidence
-        (originalityCheck.speech_pattern !== 'natural' && originalityCheck.confidence >= 40)
+        // Non-natural speech pattern — stricter threshold (35 instead of 40)
+        (originalityCheck.speech_pattern !== 'natural' && originalityCheck.confidence >= 35) ||
+        // AI-generated voice: reject even at low confidence (25)
+        (originalityCheck.speech_pattern === 'ai_generated' && originalityCheck.confidence >= 25)
       )
 
     if (transcribedText.trim().length > 10 && expectedAnswer && !isNotOriginal) {

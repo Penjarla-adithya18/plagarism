@@ -203,12 +203,29 @@ class FaceMonitor {
   private detector: any = null
   private timerId: ReturnType<typeof setTimeout> | null = null
   private onMultipleFaces: (count: number) => void
+  private onNoFace?: () => void
   private running = false
   private lastAlertTime = 0
+  private noFaceStreakStart = 0
+  private noFaceAlerted = false
   private static ALERT_COOLDOWN_MS = 3000
+  private static NO_FACE_ALERT_MS = 2000  // alert after 2 s with no face
 
-  constructor(onMultipleFaces: (count: number) => void) {
+  // Eye-contact tracking
+  private framesChecked = 0
+  private framesWithFace = 0
+
+  constructor(onMultipleFaces: (count: number) => void, onNoFace?: () => void) {
     this.onMultipleFaces = onMultipleFaces
+    this.onNoFace = onNoFace
+  }
+
+  getStats(): { eyeContactPercent: number; framesChecked: number } {
+    if (this.framesChecked === 0) return { eyeContactPercent: 100, framesChecked: 0 }
+    return {
+      eyeContactPercent: Math.round((this.framesWithFace / this.framesChecked) * 100),
+      framesChecked: this.framesChecked,
+    }
   }
 
   async start(videoEl: HTMLVideoElement) {
@@ -248,6 +265,20 @@ class FaceMonitor {
         const nowMs = performance.now()
         const result = this.detector.detectForVideo(videoEl, nowMs)
         const faceCount = result?.detections?.length ?? 0
+        this.framesChecked++
+
+        if (faceCount >= 1) {
+          this.framesWithFace++
+          this.noFaceStreakStart = 0
+          this.noFaceAlerted = false
+        } else {
+          if (this.noFaceStreakStart === 0) this.noFaceStreakStart = Date.now()
+          const absentMs = Date.now() - this.noFaceStreakStart
+          if (absentMs >= FaceMonitor.NO_FACE_ALERT_MS && !this.noFaceAlerted) {
+            this.noFaceAlerted = true
+            this.onNoFace?.()
+          }
+        }
 
         if (faceCount > 1) {
           const now = Date.now()
@@ -435,7 +466,9 @@ export function VideoSkillAssessment({
   // Face & noise monitoring
   const faceMonitorRef = useRef<FaceMonitor | null>(null)
   const noiseMonitorRef = useRef<NoiseMonitor | null>(null)
+  const faceMetricsRef = useRef<{ eyeContactPercent: number; framesChecked: number } | null>(null)
   const [faceAlert, setFaceAlert] = useState<{ visible: boolean; count: number }>({ visible: false, count: 0 })
+  const [noFaceAlert, setNoFaceAlert] = useState(false)
   const [noiseAlert, setNoiseAlert] = useState<{ visible: boolean; type: 'spike' | 'background' | null }>({ visible: false, type: null })
 
   // Refs to avoid stale closures in recording pipeline
@@ -762,6 +795,7 @@ export function VideoSkillAssessment({
       timerRef.current = null
     }
     setFaceAlert({ visible: false, count: 0 })
+    setNoFaceAlert(false)
     setNoiseAlert({ visible: false, type: null })
   }, [])
 
@@ -828,13 +862,19 @@ export function VideoSkillAssessment({
       analyzer.start(stream)
       audioAnalyzerRef.current = analyzer
 
-      // Start face detection (multi-person monitoring)
+      // Start face detection (multi-person monitoring + eye-contact tracking)
       // Wait a tick so the <video> has rendered at least one frame for MediaPipe
-      const faceMonitor = new FaceMonitor((count) => {
-        setFaceAlert({ visible: true, count })
-        // Auto-hide after 4 seconds
-        setTimeout(() => setFaceAlert(prev => prev.count === count ? { visible: false, count: 0 } : prev), 4000)
-      })
+      const faceMonitor = new FaceMonitor(
+        (count) => {
+          setFaceAlert({ visible: true, count })
+          setTimeout(() => setFaceAlert(prev => prev.count === count ? { visible: false, count: 0 } : prev), 4000)
+        },
+        () => {
+          // No face detected for 2+ seconds — prompt worker to face camera
+          setNoFaceAlert(true)
+          setTimeout(() => setNoFaceAlert(false), 4000)
+        },
+      )
       faceMonitorRef.current = faceMonitor
       if (videoRef.current) {
         const vidEl = videoRef.current
@@ -909,8 +949,9 @@ export function VideoSkillAssessment({
       audioAnalyzerRef.current = null
     }
 
-    // Stop face & noise monitors
+    // Stop face & noise monitors — save eye-contact stats before stopping
     if (faceMonitorRef.current) {
+      faceMetricsRef.current = faceMonitorRef.current.getStats()
       faceMonitorRef.current.stop()
       faceMonitorRef.current = null
     }
@@ -919,6 +960,7 @@ export function VideoSkillAssessment({
       noiseMonitorRef.current = null
     }
     setFaceAlert({ visible: false, count: 0 })
+    setNoFaceAlert(false)
     setNoiseAlert({ visible: false, type: null })
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -963,6 +1005,7 @@ export function VideoSkillAssessment({
       fd.append('language', languageRef.current)  // worker's chosen language → Whisper hint
       fd.append('videoDurationMs', String(RECORDING_TIME_S * 1000))
       fd.append('audioMetrics', JSON.stringify(audioMetricsRef.current))
+      fd.append('faceMetrics', JSON.stringify(faceMetricsRef.current ?? { eyeContactPercent: 100, framesChecked: 0 }))
 
       const res = await fetch('/api/ai/skill-video-submit', {
         method: 'POST',
@@ -1398,6 +1441,19 @@ export function VideoSkillAssessment({
                     <Mic className="w-3 h-3 mr-1" /> Audio recording
                   </Badge>
                 </div>
+
+                {/* ── No face / look at camera alert ───────────────────── */}
+                {noFaceAlert && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-yellow-500/20 backdrop-blur-[2px] animate-in fade-in duration-300 z-10">
+                    <div className="bg-yellow-600 text-white rounded-xl px-5 py-4 shadow-2xl flex items-center gap-3 max-w-[90%]">
+                      <Camera className="w-7 h-7 flex-shrink-0 animate-pulse" />
+                      <div>
+                        <p className="font-bold text-sm">Face Not Detected!</p>
+                        <p className="text-xs opacity-90">Please face the camera directly and ensure good lighting.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Multiple faces alert overlay ──────────────────────────── */}
                 {faceAlert.visible && (
