@@ -52,6 +52,7 @@ import {
   type FaceDescriptor,
   type FaceMatchResult,
 } from '@/lib/faceVerification'
+import Editor from '@monaco-editor/react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,7 +86,7 @@ interface VideoSkillAssessmentProps {
   open: boolean
 }
 
-type Phase = 'selfie-verification' | 'intro' | 'loading' | 'read-question' | 'recording' | 'submitting' | 'skill-done' | 'all-done'
+type Phase = 'selfie-verification' | 'intro' | 'loading' | 'read-question' | 'recording' | 'submitting' | 'skill-done' | 'coding-challenge' | 'all-done'
 type Language = 'en' | 'hi' | 'te'
 
 const LANG_LABELS: Record<Language, string> = {
@@ -498,6 +499,18 @@ export function VideoSkillAssessment({
   const languageRef = useRef<Language>('en')
   const submitRecordingRef = useRef<() => Promise<void>>(async () => {})
 
+  // ── Coding Challenge State ─────────────────────────────────────────────────
+  const [codeChallenge, setCodeChallenge] = useState<{
+    question: string; starterCode: string; exampleInput: string;
+    exampleOutput: string; language: string
+  } | null>(null)
+  const [userCode, setUserCode] = useState('')
+  const [codeTimer, setCodeTimer] = useState(60)
+  const [codeResult, setCodeResult] = useState<{ passed: boolean; score: number; feedback: string } | null>(null)
+  const [codeSubmitting, setCodeSubmitting] = useState(false)
+  const codeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const submitCodeRef = useRef<() => void>(() => {})
+
   const currentSkill = skills[currentSkillIdx] ?? ''
 
   // Cleanup on unmount
@@ -505,6 +518,7 @@ export function VideoSkillAssessment({
     return () => {
       stopStream()
       if (timerRef.current) clearInterval(timerRef.current)
+      if (codeTimerRef.current) clearInterval(codeTimerRef.current)
     }
   }, [])
 
@@ -1209,6 +1223,67 @@ export function VideoSkillAssessment({
       setPhase('all-done')
     }
   }, [currentSkillIdx, skills.length])
+
+  // ── Coding Challenge ────────────────────────────────────────────────────────
+  const startCodingChallenge = useCallback(async () => {
+    setPhase('coding-challenge')
+    setCodeChallenge(null)
+    setCodeResult(null)
+    setUserCode('')
+    setCodeTimer(60)
+    if (codeTimerRef.current) { clearInterval(codeTimerRef.current); codeTimerRef.current = null }
+    try {
+      const res = await fetch('/api/ai/code-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skill: currentSkillRef.current, action: 'generate' }),
+      })
+      const data = await res.json()
+      setCodeChallenge(data)
+      setUserCode(data.starterCode ?? '')
+      setCodeTimer(60)
+      codeTimerRef.current = setInterval(() => {
+        setCodeTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(codeTimerRef.current!); codeTimerRef.current = null
+            submitCodeRef.current()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } catch {
+      // If challenge fetch fails, just move to next skill
+      nextSkill()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextSkill])
+
+  const submitCode = useCallback(async () => {
+    if (codeTimerRef.current) { clearInterval(codeTimerRef.current); codeTimerRef.current = null }
+    setCodeSubmitting(true)
+    try {
+      const res = await fetch('/api/ai/code-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          skill: currentSkillRef.current,
+          action: 'evaluate',
+          code: userCode,
+          question: codeChallenge?.question,
+        }),
+      })
+      const data = await res.json()
+      setCodeResult(data)
+    } catch {
+      setCodeResult({ passed: false, score: 0, feedback: 'Evaluation failed. Please try again.' })
+    }
+    setCodeSubmitting(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userCode, codeChallenge])
+
+  // Keep submitCodeRef in sync so the timer callback always calls latest version
+  useEffect(() => { submitCodeRef.current = submitCode }, [submitCode])
 
   // ── Format timer ────────────────────────────────────────────────────────────
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -1961,18 +2036,148 @@ export function VideoSkillAssessment({
 
             <DialogFooter>
               {currentSkillIdx + 1 < skills.length ? (
-                <Button onClick={nextSkill} className="gap-2">
-                  <ArrowRight className="w-4 h-4" /> Next Skill
+                <Button onClick={startCodingChallenge} className="gap-2">
+                  <ArrowRight className="w-4 h-4" /> Next: Coding Challenge
                 </Button>
               ) : (
-                <Button onClick={() => { setPhase('all-done') }} className="gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> View Summary
+                <Button onClick={startCodingChallenge} className="gap-2">
+                  <CheckCircle2 className="w-4 h-4" /> Final: Coding Challenge
                 </Button>
               )}
             </DialogFooter>
           </>
           )
         })()}
+
+        {/* ── CODING CHALLENGE ──────────────────────────────────────────────── */}
+        {phase === 'coding-challenge' && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-blue-500" />
+                💻 Coding Challenge — {currentSkill}
+              </DialogTitle>
+              <DialogDescription>
+                Demonstrate your technical skills with a quick coding question
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* Timer badge */}
+              {!codeResult && (
+                <div className="flex justify-end">
+                  <Badge
+                    className={`text-base px-3 py-1 font-mono ${
+                      codeTimer <= 10
+                        ? 'bg-red-600 text-white animate-pulse'
+                        : codeTimer <= 30
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-slate-700 text-white'
+                    }`}
+                  >
+                    <Clock className="w-4 h-4 mr-1 inline" />
+                    {codeTimer}s
+                  </Badge>
+                </div>
+              )}
+
+              {/* Loading state */}
+              {!codeChallenge && !codeResult && (
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Generating personalized challenge…</p>
+                </div>
+              )}
+
+              {/* Challenge content */}
+              {codeChallenge && !codeResult && (
+                <>
+                  {/* Question card */}
+                  <Card className="p-4 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                    <h3 className="font-semibold mb-2 text-blue-800 dark:text-blue-300">Question</h3>
+                    <p className="text-sm whitespace-pre-wrap">{codeChallenge.question}</p>
+                    {(codeChallenge.exampleInput || codeChallenge.exampleOutput) && (
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        {codeChallenge.exampleInput && (
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded p-2">
+                            <span className="font-medium block mb-1 text-muted-foreground">Input:</span>
+                            <code className="text-green-700 dark:text-green-400">{codeChallenge.exampleInput}</code>
+                          </div>
+                        )}
+                        {codeChallenge.exampleOutput && (
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded p-2">
+                            <span className="font-medium block mb-1 text-muted-foreground">Expected Output:</span>
+                            <code className="text-blue-700 dark:text-blue-400">{codeChallenge.exampleOutput}</code>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+
+                  {/* Monaco Editor */}
+                  <div className="rounded-md overflow-hidden border border-slate-600">
+                    <Editor
+                      height="280px"
+                      language={codeChallenge.language}
+                      value={userCode}
+                      onChange={(v) => setUserCode(v ?? '')}
+                      theme="vs-dark"
+                      options={{
+                        fontSize: 13,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        wordWrap: 'on',
+                        lineNumbers: 'on',
+                        tabSize: 2,
+                      }}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={submitCode}
+                    disabled={codeSubmitting || !userCode.trim()}
+                    className="w-full gap-2"
+                  >
+                    {codeSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {codeSubmitting ? 'Evaluating…' : 'Submit Code'}
+                  </Button>
+                </>
+              )}
+
+              {/* Result */}
+              {codeResult && (
+                <div className="space-y-4">
+                  <Card className={`p-4 ${
+                    codeResult.passed
+                      ? 'bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700'
+                      : 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-700'
+                  }`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      {codeResult.passed
+                        ? <CheckCircle2 className="w-6 h-6 text-green-600" />
+                        : <XCircle className="w-6 h-6 text-red-600" />}
+                      <div>
+                        <p className={`font-bold text-lg ${codeResult.passed ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+                          {codeResult.passed ? '✅ Passed!' : '❌ Not Passed'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Score: {codeResult.score}/100</p>
+                      </div>
+                    </div>
+                    <p className="text-sm leading-relaxed">{codeResult.feedback}</p>
+                  </Card>
+
+                  <Button onClick={nextSkill} className="w-full gap-2">
+                    {currentSkillIdx + 1 < skills.length ? (
+                      <><ArrowRight className="w-4 h-4" /> Continue to Next Skill</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4" /> View Final Summary</>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* ── ALL DONE ──────────────────────────────────────────────────────── */}
         {phase === 'all-done' && (
