@@ -68,7 +68,8 @@ function EnvCamContent() {
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        await videoRef.current.play()
+        // play() may throw on strict autoplay policy — onCanPlay will retry
+        videoRef.current.play().catch(() => {})
       }
       setStatus('camera-ready')
 
@@ -86,18 +87,37 @@ function EnvCamContent() {
     }
   }, [session])
 
+  // ── Detect best supported MIME type ─────────────────────────────────────
+  const getBestMimeType = () => {
+    const candidates = [
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm',
+      'video/mp4;codecs=h264',
+      'video/mp4',
+    ]
+    for (const t of candidates) {
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) return t
+    }
+    return '' // let the browser decide
+  }
+
   // ── Record video and upload ────────────────────────────────────────────────
   const startRecording = useCallback(async () => {
     if (!streamRef.current) return
     setStatus('recording')
     chunksRef.current = []
 
-    const mr = new MediaRecorder(streamRef.current, { mimeType: 'video/webm' })
+    const mimeType = getBestMimeType()
+    const mr = mimeType
+      ? new MediaRecorder(streamRef.current, { mimeType })
+      : new MediaRecorder(streamRef.current)
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
     mr.onstop = async () => {
       setStatus('uploading')
       try {
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+        const usedMime = mediaRecorderRef.current?.mimeType || 'video/webm'
+        const blob = new Blob(chunksRef.current, { type: usedMime })
         const fd = new FormData()
         fd.append('video', blob, `env-${Date.now()}.webm`)
         fd.append('session', session)
@@ -253,19 +273,23 @@ function EnvCamContent() {
 
       {/* Camera preview */}
       {(status === 'waiting-start' || status === 'recording') && (
-        <div className="w-full max-w-sm rounded-xl overflow-hidden bg-black aspect-video border border-slate-700">
+        <div className="w-full max-w-sm relative rounded-xl overflow-hidden bg-black aspect-video border border-slate-700">
+          {/* video must be absolute so aspect-ratio drives height on all mobile browsers */}
           <video
             ref={videoRef}
             muted
             playsInline
             autoPlay
-            className="w-full h-full object-cover"
+            onCanPlay={() => { videoRef.current?.play().catch(() => {}) }}
+            className="absolute inset-0 w-full h-full object-cover"
           />
           {status === 'waiting-start' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <div className="text-center text-white space-y-2">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-400" />
-                <p className="text-sm font-medium">Waiting for assessment to start...</p>
+            <div className="absolute inset-0 flex items-end justify-center pb-4 bg-black/30">
+              <div className="text-center text-white space-y-1 bg-black/60 rounded-xl px-4 py-2">
+                <p className="text-sm font-medium flex items-center gap-2 justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  Waiting for assessment to start...
+                </p>
                 <p className="text-xs text-slate-400">Keep this screen open and pointed at the workspace</p>
               </div>
             </div>
