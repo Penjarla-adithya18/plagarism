@@ -99,6 +99,23 @@ const QUESTION_READ_TIME_S = 30  // 30 seconds to read question
 const RECORDING_TIME_S = 60      // 1 minute to record answer
 const MAX_VIDEO_SIZE_MB = 8      // Keep under Next.js body limit (base64 adds ~33%)
 
+// Technical/coding skill keywords — only these get a coding challenge
+const CODING_SKILL_KEYWORDS = [
+  'javascript','typescript','react','vue','angular','node','nodejs','js','ts',
+  'python','django','flask','fastapi','machine learning','ml','ai','deep learning',
+  'java','spring','android','kotlin','swift','ios',
+  'c++','cpp','c#','csharp','dotnet',
+  'php','laravel','wordpress','ruby','rails','go','golang','rust',
+  'sql','mysql','postgresql','postgres','database','mongodb','redis',
+  'html','css','web','frontend','backend','fullstack','full stack','full-stack',
+  'bash','shell','linux','devops','docker','kubernetes','cloud','aws','azure','gcp',
+  'programming','coding','software','developer','development','engineer','algorithm','data structure',
+]
+function isCodingSkill(skill: string): boolean {
+  const s = skill.toLowerCase()
+  return CODING_SKILL_KEYWORDS.some(kw => s.includes(kw))
+}
+
 // ── Audio Analysis Helpers ────────────────────────────────────────────────────
 
 interface AudioMetrics {
@@ -1427,7 +1444,7 @@ export function VideoSkillAssessment({
                     </>
                   )}
                 </Button>
-              ) : (
+              ) : isCodingSkill(currentSkill) ? (
                 <div className="flex flex-col gap-2 w-full sm:flex-row sm:justify-end">
                   <Button
                     variant="outline"
@@ -1453,6 +1470,10 @@ export function VideoSkillAssessment({
                     <ArrowRight className="w-4 h-4" /> Coding Assessment
                   </Button>
                 </div>
+              ) : (
+                <Button onClick={() => setPhase('intro')} className="gap-2">
+                  <ArrowRight className="w-4 h-4" /> Continue to Assessment
+                </Button>
               )}
             </DialogFooter>
           </>
