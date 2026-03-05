@@ -1427,8 +1427,28 @@ export function VideoSkillAssessment({
                   )}
                 </Button>
               ) : (
-                <Button onClick={() => setPhase('intro')} className="gap-2">
-                  <ArrowRight className="w-4 h-4" /> Continue to Assessment
+                <Button
+                  onClick={() => {
+                    if (currentSkill.toLowerCase().includes('java')) {
+                      // Skip video assessment for Java — go straight to coding challenge
+                      setResults(prev => [...prev, {
+                        skill: currentSkill,
+                        submitted: false,
+                        verdict: 'pending' as const,
+                        verdictReason: 'Video assessment skipped — coding challenge only',
+                        score: undefined,
+                      }])
+                      startCodingChallenge()
+                    } else {
+                      setPhase('intro')
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  {currentSkill.toLowerCase().includes('java')
+                    ? 'Skip to Coding Challenge'
+                    : 'Continue to Assessment'}
                 </Button>
               )}
             </DialogFooter>
