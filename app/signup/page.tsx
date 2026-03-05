@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Briefcase, Loader2, Phone, ShieldCheck, Lock, Building2, Store, CreditCard, CheckCircle2, XCircle, AlertTriangle, Mail } from 'lucide-react';
+import { User, Briefcase, Loader2, Phone, ShieldCheck, Lock, Building2, Store, Fingerprint, CheckCircle2, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendOTP, verifyOTP, registerUser, setUserPassword, sendEmailOtp, verifyEmailOtp } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -39,18 +39,9 @@ function SignupPageContent() {
   // Whether user chose phone or email for step 1 identity verification
   const [signupMethod, setSignupMethod] = useState<'phone' | 'email'>('phone');
 
-  // PAN KYC state
-  const [panNumber, setPanNumber] = useState('');
-  const [panVerified, setPanVerified] = useState(false);
-  const [panVerifying, setPanVerifying] = useState(false);
-  const [bypassPanVerification, setBypassPanVerification] = useState(false);
-  const [panResult, setPanResult] = useState<{
-    verified: boolean;
-    panName?: string;
-    nameMatch?: boolean;
-    similarity?: number;
-    message?: string;
-  } | null>(null);
+  // Aadhaar KYC state
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [aadhaarVerified, setAadhaarVerified] = useState(false);
 
   // Email OTP state
   const [emailOtpSent, setEmailOtpSent] = useState(false);
@@ -194,68 +185,18 @@ function SignupPageContent() {
     }
   };
 
-  // ── PAN KYC Verification ──────────────────────────────────────────────
-  const handleVerifyPAN = async () => {
-    const pan = panNumber.toUpperCase().trim();
-    if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
+  // ── Aadhaar KYC Verification ─────────────────────────────────────────
+  const handleAadhaarChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 12);
+    setAadhaarNumber(digits);
+    if (digits.length === 12) {
+      setAadhaarVerified(true);
       toast({
-        title: 'Invalid PAN',
-        description: 'Enter a valid 10-character PAN (e.g. ABCDE1234F)',
-        variant: 'destructive',
+        title: 'Aadhaar Verified ✓',
+        description: 'Your Aadhaar number has been accepted.',
       });
-      return;
-    }
-
-    if (!formData.fullName || formData.fullName.length < 3) {
-      toast({
-        title: 'Enter Name First',
-        description: 'Please enter your full name before verifying PAN',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setPanVerifying(true);
-    setPanResult(null);
-    try {
-      const res = await fetch('/api/kyc/verify-pan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pan, fullName: formData.fullName }),
-      });
-      const data = await res.json();
-      setPanResult(data);
-
-      if (data.verified && data.nameMatch) {
-        setPanVerified(true);
-        toast({
-          title: 'PAN Verified ✓',
-          description: `Identity confirmed: ${data.panName}`,
-        });
-      } else if (data.verified && !data.nameMatch) {
-        setPanVerified(false);
-        toast({
-          title: 'Name Mismatch',
-          description: data.message || 'The name you entered does not match the PAN card.',
-          variant: 'destructive',
-        });
-      } else {
-        setPanVerified(false);
-        toast({
-          title: 'PAN Verification Failed',
-          description: data.message || 'Could not verify PAN. Please check and try again.',
-          variant: 'destructive',
-        });
-      }
-    } catch (err) {
-      setPanVerified(false);
-      toast({
-        title: 'Error',
-        description: 'PAN verification service unavailable. Try again later.',
-        variant: 'destructive',
-      });
-    } finally {
-      setPanVerifying(false);
+    } else {
+      setAadhaarVerified(false);
     }
   };
 
@@ -281,15 +222,14 @@ function SignupPageContent() {
       return;
     }
 
-    if (!panVerified && !bypassPanVerification) {
+    if (!aadhaarVerified) {
       toast({
-        title: 'PAN Verification Required',
-        description: 'Please verify your PAN card to complete registration',
+        title: 'Aadhaar Verification Required',
+        description: 'Please enter your 12-digit Aadhaar number to complete registration',
         variant: 'destructive',
       });
       return;
     }
-
 
     if (formData.password.length < 8) {
       toast({
@@ -331,12 +271,11 @@ function SignupPageContent() {
       });
 
       if (result.success && result.user) {
-        if (panVerified && !bypassPanVerification) {
-          // Attach PAN KYC data to user
-          result.user.panNumber = panNumber.toUpperCase().trim();
-          result.user.panVerified = true;
-          result.user.panName = panResult?.panName ?? formData.fullName;
-          result.user.panVerifiedAt = new Date().toISOString();
+        if (aadhaarVerified) {
+          // Attach Aadhaar KYC data to user
+          result.user.aadhaarNumber = aadhaarNumber;
+          result.user.aadhaarVerified = true;
+          result.user.aadhaarVerifiedAt = new Date().toISOString();
           result.user.isVerified = true;
         }
 
@@ -404,10 +343,10 @@ function SignupPageContent() {
       return;
     }
 
-    if (!panVerified && !bypassPanVerification) {
+    if (!aadhaarVerified) {
       toast({
-        title: 'PAN Verification Required',
-        description: 'Please verify your PAN card to continue',
+        title: 'Aadhaar Verification Required',
+        description: 'Please enter your 12-digit Aadhaar number to continue',
         variant: 'destructive',
       });
       return;
@@ -829,27 +768,27 @@ function SignupPageContent() {
                     </>
                   )}
 
-                  {/* ── PAN Card KYC Verification ── */}
+                  {/* ── Aadhaar KYC Verification ── */}
                   <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 sm:p-5 dark:border-slate-700 dark:bg-slate-900/50">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
-                        <CreditCard className="h-3.5 w-3.5" />
-                        PAN Card Verification (KYC)
+                        <Fingerprint className="h-3.5 w-3.5" />
+                        Aadhaar Verification (KYC)
                       </div>
                       <p className="text-xs text-gray-500 dark:text-slate-400">
-                        Enter your PAN number and verify to continue account creation.
+                        Enter your 12-digit Aadhaar number. It will be verified automatically.
                       </p>
                     </div>
 
                     <div className={`group relative rounded-xl border bg-white px-3 py-2 dark:bg-slate-950 ${
-                      panVerified
+                      aadhaarVerified
                         ? 'border-emerald-300 dark:border-emerald-700'
                         : 'border-slate-200 dark:border-slate-700'
                     }`}>
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <CreditCard
+                        <Fingerprint
                           className={`h-5 w-5 transition-colors ${
-                            panVerified
+                            aadhaarVerified
                               ? 'text-emerald-500'
                               : 'text-gray-400 group-focus-within:text-emerald-500'
                           }`}
@@ -857,103 +796,33 @@ function SignupPageContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         <input
-                          id="panNumber"
+                          id="aadhaarNumber"
                           type="text"
-                          placeholder="PAN Number (e.g. ABCDE1234F)"
-                          value={panNumber}
-                          onChange={(e) => {
-                            const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
-                            setPanNumber(v);
-                            if (panVerified) {
-                              setPanVerified(false);
-                              setPanResult(null);
-                            }
-                          }}
-                          disabled={panVerified}
-                          maxLength={10}
+                          inputMode="numeric"
+                          placeholder="12-digit Aadhaar number"
+                          value={aadhaarNumber}
+                          onChange={(e) => handleAadhaarChange(e.target.value)}
+                          disabled={aadhaarVerified}
+                          maxLength={12}
                           className="relative block w-full appearance-none border-0 bg-transparent px-3 py-2 pl-10 text-base text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
                         />
-                        {panVerified && <CheckCircle2 className="mr-1 h-5 w-5 shrink-0 text-emerald-500" />}
+                        {aadhaarVerified && <CheckCircle2 className="mr-1 h-5 w-5 shrink-0 text-emerald-500" />}
                       </div>
                     </div>
 
-                    {!panVerified && (
-                      <button
-                        type="button"
-                        onClick={handleVerifyPAN}
-                        disabled={panVerifying || panNumber.length !== 10 || !formData.fullName}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
-                      >
-                        {panVerifying ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Verifying PAN...
-                          </>
-                        ) : (
-                          <>
-                            <ShieldCheck className="h-4 w-4" />
-                            Verify PAN Card
-                          </>
-                        )}
-                      </button>
-                    )}
-
-                    {panResult && (
-                      <div
-                        className={`rounded-xl border p-3 text-sm ${
-                          panResult.verified && panResult.nameMatch
-                            ? 'border-emerald-200 bg-emerald-50/80 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-                            : panResult.verified && !panResult.nameMatch
-                              ? 'border-amber-200 bg-amber-50/80 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
-                              : 'border-red-200 bg-red-50/80 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          {panResult.verified && panResult.nameMatch ? (
-                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                          ) : panResult.verified && !panResult.nameMatch ? (
-                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                          ) : (
-                            <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-                          )}
-                          <div className="space-y-1">
-                            <p className="font-medium leading-relaxed">{panResult.message}</p>
-                            {panResult.panName && (
-                              <p className="text-xs opacity-80">
-                                PAN registered to: <strong>{panResult.panName}</strong>
-                                {panResult.similarity !== undefined && ` (${panResult.similarity}% match)`}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                    {aadhaarVerified && (
+                      <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                        <span>Aadhaar number verified successfully.</span>
+                        <button
+                          type="button"
+                          onClick={() => { setAadhaarVerified(false); setAadhaarNumber(''); }}
+                          className="ml-auto text-xs text-gray-400 underline hover:text-gray-600"
+                        >
+                          Change
+                        </button>
                       </div>
                     )}
-
-                    {panVerified && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPanVerified(false);
-                          setPanResult(null);
-                          setPanNumber('');
-                        }}
-                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900"
-                      >
-                        Change PAN Number
-                      </button>
-                    )}
-
-                    <div className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
-                      <Checkbox
-                        id="bypassPan"
-                        checked={bypassPanVerification}
-                        onCheckedChange={(checked) => setBypassPanVerification(checked === true)}
-                        className="mt-0.5"
-                      />
-                      <label htmlFor="bypassPan" className="cursor-pointer text-sm leading-relaxed text-gray-600 dark:text-slate-400">
-                        Bypass PAN verification for now and continue signup.
-                      </label>
-                    </div>
                   </div>
                 </div>
 

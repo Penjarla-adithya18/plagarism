@@ -49,6 +49,12 @@ export interface User {
   panName?: string;
   /** PAN verification timestamp */
   panVerifiedAt?: string;
+  /** Aadhaar number used for KYC verification */
+  aadhaarNumber?: string;
+  /** Whether Aadhaar has been verified */
+  aadhaarVerified?: boolean;
+  /** Aadhaar verification timestamp */
+  aadhaarVerifiedAt?: string;
 }
 
 /** GSTIN verification details from ClearTax API */
