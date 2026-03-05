@@ -31,6 +31,7 @@ type Status =
   | 'recording'
   | 'uploading'
   | 'done'
+  | 'assessment-ended'
   | 'error'
 
 function EnvCamContent() {
@@ -189,8 +190,14 @@ function EnvCamContent() {
       .on('broadcast', { event: 'stop-recording' }, () => {
         console.log('[env-cam] Received stop-recording signal')
         if (mediaRecorderRef.current?.state === 'recording') {
+          // Gracefully stop — onstop handler uploads the recorded video
           mediaRecorderRef.current.stop()
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+        } else {
+          // Assessment ended before recording started (cancelled / tab-switch rejected)
+          streamRef.current?.getTracks().forEach(t => t.stop())
+          streamRef.current = null
+          setStatus('assessment-ended')
         }
       })
       .subscribe((s) => {
@@ -275,6 +282,12 @@ function EnvCamContent() {
             Environment video uploaded. You can close this tab.
           </div>
         )}
+        {status === 'assessment-ended' && (
+          <div className="flex items-center gap-2 text-sm text-slate-300">
+            <CheckCircle2 className="w-4 h-4 text-slate-400" />
+            Assessment has ended on the primary device. You can close this tab.
+          </div>
+        )}
         {(status === 'error') && (
           <div className="flex items-center gap-2 text-sm text-red-400">
             <AlertTriangle className="w-4 h-4" />
@@ -297,13 +310,26 @@ function EnvCamContent() {
             className="absolute inset-0 w-full h-full object-cover"
           />
           {status === 'waiting-start' && (
-            <div className="absolute inset-0 flex items-end justify-center pb-4 bg-black/30">
-              <div className="text-center text-white space-y-1 bg-black/60 rounded-xl px-4 py-2">
-                <p className="text-sm font-medium flex items-center gap-2 justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                  Waiting for assessment to start...
-                </p>
-                <p className="text-xs text-slate-400">Keep this screen open and pointed at the workspace</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-between p-3 bg-black/20">
+              {/* Framing guide corners */}
+              <div className="w-full flex justify-between">
+                <div className="w-6 h-6 border-t-2 border-l-2 border-emerald-400 rounded-tl" />
+                <div className="w-6 h-6 border-t-2 border-r-2 border-emerald-400 rounded-tr" />
+              </div>
+              <p className="text-xs text-emerald-300 bg-black/70 px-3 py-1 rounded-full text-center">
+                💻 Laptop + 🧑 Person must both be visible
+              </p>
+              <div className="w-full flex justify-between">
+                <div className="w-6 h-6 border-b-2 border-l-2 border-emerald-400 rounded-bl" />
+                <div className="w-6 h-6 border-b-2 border-r-2 border-emerald-400 rounded-br" />
+              </div>
+              <div className="absolute bottom-12 left-0 right-0 flex justify-center">
+                <div className="text-center text-white bg-black/60 rounded-xl px-4 py-2">
+                  <p className="text-xs font-medium flex items-center gap-2 justify-center">
+                    <Loader2 className="w-3 h-3 animate-spin text-emerald-400" />
+                    Waiting for assessment to start...
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -317,10 +343,11 @@ function EnvCamContent() {
             <Camera className="w-4 h-4 text-emerald-400" /> Setup Instructions
           </h3>
           <ol className="text-xs text-slate-400 space-y-1.5 list-decimal list-inside">
-            <li>Place this phone to the <strong className="text-white">side or behind</strong> the worker</li>
-            <li>Ensure the <strong className="text-white">desk and hands</strong> are visible</li>
-            <li>Recording starts <strong className="text-white">automatically</strong> when the test begins</li>
-            <li>Do <strong className="text-white">not</strong> touch or move this phone during the test</li>
+            <li>Place this phone at a <strong className="text-white">45° angle to the side</strong> of the worker</li>
+            <li>Frame the shot so the <strong className="text-white">laptop screen AND the person&apos;s upper body</strong> are fully visible</li>
+            <li>Verify <strong className="text-white">only one person</strong> appears in the preview above</li>
+            <li>Recording starts <strong className="text-white">automatically</strong> when the test begins on the primary device</li>
+            <li>This screen will update automatically when the assessment <strong className="text-white">ends or is stopped</strong></li>
           </ol>
         </Card>
       )}
@@ -343,8 +370,9 @@ function StatusBadge({ status }: { status: Status }) {
     'waiting-start': { label: 'Waiting',         className: 'bg-amber-900 text-amber-300' },
     recording:      { label: '● Recording',     className: 'bg-red-900 text-red-300' },
     uploading:      { label: 'Uploading',        className: 'bg-blue-900 text-blue-300' },
-    done:           { label: '✓ Done',           className: 'bg-green-900 text-green-300' },
-    error:          { label: 'Error',            className: 'bg-red-900 text-red-300' },
+        done:              { label: '✓ Done',            className: 'bg-green-900 text-green-300' },
+        'assessment-ended': { label: 'Ended',            className: 'bg-slate-700 text-slate-300' },
+        error:              { label: 'Error',            className: 'bg-red-900 text-red-300' },
   }
   const { label, className } = map[status]
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${className}`}>{label}</span>
