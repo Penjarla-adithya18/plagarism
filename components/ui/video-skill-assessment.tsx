@@ -1426,7 +1426,7 @@ export function VideoSkillAssessment({
                     </>
                   )}
                 </Button>
-              ) : currentSkill.toLowerCase().includes('java') ? (
+              ) : (
                 <div className="flex flex-col gap-2 w-full sm:flex-row sm:justify-end">
                   <Button
                     variant="outline"
@@ -1448,13 +1448,9 @@ export function VideoSkillAssessment({
                     }}
                     className="gap-2"
                   >
-                    <ArrowRight className="w-4 h-4" /> Skip to Coding Challenge
+                    <ArrowRight className="w-4 h-4" /> Coding Assessment
                   </Button>
                 </div>
-              ) : (
-                <Button onClick={() => setPhase('intro')} className="gap-2">
-                  <ArrowRight className="w-4 h-4" /> Continue to Assessment
-                </Button>
               )}
             </DialogFooter>
           </>
