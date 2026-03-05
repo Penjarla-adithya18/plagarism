@@ -310,28 +310,6 @@ export default function LoginPage() {
               </p>
             </form>
 
-            <div className="mt-8 border-t border-gray-100 pt-6 text-xs text-gray-400 dark:border-slate-800 dark:text-slate-500">
-              <h3 className="mb-2 font-bold uppercase tracking-widest text-gray-300 dark:text-slate-600">Demo Access</h3>
-              <div className="flex flex-wrap gap-4">
-                <button
-                  type="button"
-                  className="cursor-pointer transition-colors hover:text-emerald-500"
-                  title="Use 9876543210 / Password@123"
-                  onClick={() => setFormData({ identifier: '9876543210', password: 'Password@123' })}
-                >
-                  Worker: 9876543210
-                </button>
-                <button
-                  type="button"
-                  className="cursor-pointer transition-colors hover:text-emerald-500"
-                  title="Use 9876543212 / Password@123"
-                  onClick={() => setFormData({ identifier: '9876543212', password: 'Password@123' })}
-                >
-                  Employer: 9876543212
-                </button>
-              </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">Demo password: Password@123</p>
-            </div>
           </div>
         </section>
       </div>

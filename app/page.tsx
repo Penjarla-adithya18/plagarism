@@ -2,7 +2,6 @@
 import { Button } from '@/components/ui/button';
 import {
   BriefcaseBusiness,
-  Sparkles,
   LineChart,
   ShieldCheck,
   MessageCircle,
@@ -54,10 +53,6 @@ export default function LandingPage() {
         </div>
 
         <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200/70 bg-white/70 px-4 py-1.5 text-sm font-semibold text-emerald-700 shadow-sm backdrop-blur-sm dark:border-emerald-700/40 dark:bg-slate-900/60 dark:text-emerald-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            Powered by Gemini AI
-          </div>
           <h1 className="mb-6 text-5xl font-extrabold leading-[1.06] tracking-tight md:text-7xl">
             Find Local Jobs That<br />
             <span className="gradient-text">Match Your Skills</span>
